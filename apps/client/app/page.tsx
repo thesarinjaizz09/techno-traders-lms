@@ -1,6 +1,7 @@
 import { openSans } from '@/fonts';
 import generatePageMetadata from '@/lib/utils/seo';
 import { ArrowUpRight, Star } from 'lucide-react';
+import Link from 'next/link';
 
 export const metadata = generatePageMetadata({
   title: "Home",
@@ -79,10 +80,10 @@ const Page = () => {
         </p>
 
         {/* CTA Button */}
-        <button className="group relative flex items-center gap-2 bg-[#00ff9d] text-black px-8 py-4 rounded-full font-bold text-lg hover:bg-[#00e68e] transition-all duration-300 shadow-[0_0_30px_rgba(0,255,157,0.3)] hover:shadow-[0_0_40px_rgba(0,255,157,0.5)]">
+        <Link href="/auth" className="group relative flex items-center gap-2 bg-[#00ff9d] text-black px-8 py-4 rounded-full font-bold text-lg hover:bg-[#00e68e] transition-all duration-300 shadow-[0_0_30px_rgba(0,255,157,0.3)] hover:shadow-[0_0_40px_rgba(0,255,157,0.5)]">
           Get started now
           <ArrowUpRight className="w-5 h-5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-        </button>
+        </Link>
 
         {/* Trust Section */}
         <div className="mt-20 flex flex-col items-center gap-3">
