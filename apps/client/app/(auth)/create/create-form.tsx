@@ -74,7 +74,7 @@ export function CreateForm({ className }: React.ComponentProps<"form">) {
           <div className="flex flex-col items-start gap-1 text-left">
             <h1 className="text-3xl font-bold">Create Credentials</h1>
             <p className="text-sm w-full">
-              Create your credentials to access the PostDepot Dashboard
+              Create your credentials to access the Dashboard
             </p>
           </div>
 
