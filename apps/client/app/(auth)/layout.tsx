@@ -17,7 +17,7 @@ const AuthLayout = async ({
       <div className="flex flex-col gap-4 p-6 md:p-10 w-full h-full rounded-sm">
         <div className="flex justify-start">
           <Link href="/" className="flex items-center gap-2 font-medium">
-            <div className="p-[6px] border rounded-sm bg-muted"
+            <div className="p-[5px] border rounded-sm bg-muted"
             >
               <Image
                 src={appLogo}

@@ -53,9 +53,9 @@ export function AppSidebar({ name, email }: AppSidebarProps) {
                 </div>
                 <div className="grid flex-1 text-left leading-tight text-primary-foreground">
                   <span className="truncate text-md text-primary-foreground font-semibold">
-                    AlphaFusion
+                    Techno Traders
                   </span>
-                  <span className="truncate text-[11px] text-muted-foreground">PostDepot</span>
+                  <span className="truncate text-[11px] text-muted-foreground">SIDA</span>
                 </div>
               </Link>
             </SidebarMenuButton>

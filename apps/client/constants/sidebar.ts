@@ -31,29 +31,29 @@ export const SIDEBAR_MAIN_NAVIGATION = [
   /* =======================
      CAMPAIGNS (CORE)
      ======================= */
-  {
-    title: "Campaigns",
-    url: "/campaigns",
-    icon: Mail,
-    items: [
-      {
-        title: "Activity",
-        url: "/campaigns",
-      },
-    ],
-  },
+  // {
+  //   title: "Campaigns",
+  //   url: "/campaigns",
+  //   icon: Mail,
+  //   items: [
+  //     {
+  //       title: "Activity",
+  //       url: "/campaigns",
+  //     },
+  //   ],
+  // },
 
   /* =======================
      AUDIENCE
      ======================= */
   {
-    title: "Audience",
-    url: "/leads",
+    title: "Community",
+    url: "/forum",
     icon: Users,
     items: [
       {
-        title: "Customers",
-        url: "/customers",
+        title: "Forums",
+        url: "/forum",
       },
     ],
   },
