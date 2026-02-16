@@ -1,65 +1,105 @@
-import Image from "next/image";
+import { openSans } from '@/fonts';
+import generatePageMetadata from '@/lib/utils/seo';
+import { ArrowUpRight, Star } from 'lucide-react';
 
-export default function Home() {
+export const metadata = generatePageMetadata({
+  title: "Home",
+  description:
+    "Techno Traders is a private trading education and community platform where members learn, discuss, and grow together. Access expert-led content, engage in a global forum, and collaborate with traders in real time.",
+  image: "/og-home.jpg",
+  url: "/",
+  schemaType: "WebPage",
+});
+
+const Page = () => {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <div className={`${openSans.className} relative min-h-screen w-full bg-[#05080a] text-white overflow-hidden font-sans`}>
+      {/* Background Gradients */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {/* Top Left Glow */}
+        <div
+          className="absolute -top-[20%] -left-[10%] w-[60%] h-[60%] rounded-full opacity-20 blur-[120px]"
+          style={{ background: 'radial-gradient(circle, #1a2b2b 0%, transparent 70%)' }}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+        {/* Center/Bottom Green Glow */}
+        <div
+          className="absolute top-[40%] left-1/2 -translate-x-1/2 w-[80%] h-[80%] rounded-full opacity-10 blur-[150px]"
+          style={{ background: 'radial-gradient(circle, #00ff9d 0%, transparent 70%)' }}
+        />
+        {/* Bottom Subtle Green Line/Glow */}
+        <div
+          className="absolute bottom-0 left-0 right-0 h-[200px] opacity-30 blur-[80px]"
+          style={{ background: 'linear-gradient(to top, #00ff9d 0%, transparent 100%)' }}
+        />
+      </div>
+
+      {/* Navigation */}
+      <nav
+        className={`${openSans.className}
+    sticky top-0 z-50
+    mx-auto w-full
+    flex items-center justify-center gap-8
+    px-10 py-4
+    text-md font-semibold text-gray-300
+    h-22
+    backdrop-blur-xl
+    border-b-2 border-gray-700/30
+    bg-black/20
+    text-gray-500
+    shadow-[0_8px_30px_rgba(0,0,0,0.35)]
+    `}>
+        <a href="#" className="text-gray-400 hover:text-gray-400 transition-colors">
+          About
+        </a>
+        <a href="#" className="hover:text-gray-400 transition-colors">
+          Courses
+        </a>
+        <a href="#" className="hover:text-gray-400 transition-colors">
+          How it works
+        </a>
+        <a href="#" className="hover:text-gray-400 transition-colors">
+          Testimonials
+        </a>
+        <a href="#" className="hover:text-gray-400 transition-colors">
+          FAQ
+        </a>
+      </nav>
+
+
+      {/* Hero Content */}
+      <div className="relative z-10 flex flex-col items-center justify-center text-center px-4 pt-20 pb-32 max-w-5xl mx-auto mt-10">
+        <h1 className={`${openSans.className} text-6xl md:text-8xl font-sans font-semibold tracking-tight leading-[1.1] mb-7`}>
+          Trading with<br />
+          Option Mathematics
+        </h1>
+
+        <p className="text-gray-500 text-lg max-w-2xl mb-12 leading-relaxed font-semibold">
+          Techno Traders teaches you Stock Marketing Trading with the help of Option Mathematics.
+          Learn with the help of our own TT Calculator.
+        </p>
+
+        {/* CTA Button */}
+        <button className="group relative flex items-center gap-2 bg-[#00ff9d] text-black px-8 py-4 rounded-full font-bold text-lg hover:bg-[#00e68e] transition-all duration-300 shadow-[0_0_30px_rgba(0,255,157,0.3)] hover:shadow-[0_0_40px_rgba(0,255,157,0.5)]">
+          Get started now
+          <ArrowUpRight className="w-5 h-5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+        </button>
+
+        {/* Trust Section */}
+        <div className="mt-20 flex flex-col items-center gap-3">
+          <span className="text-gray-500 text-sm uppercase tracking-widest">They trust us</span>
+          <div className="flex items-center flex-col gap-1">
+            <div className="flex items-center gap-3">
+              {[...Array(5)].map((_, i) => (
+                <div className="p-1 border rounded-full border-white/20 bg-white/10" key={i}>
+                  <Star key={i} className="w-4 h-4 fill-white text-white" />
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+      </div>
     </div>
   );
-}
+};
+
+export default Page;
