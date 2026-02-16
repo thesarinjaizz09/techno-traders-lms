@@ -3,51 +3,51 @@ import type { Metadata } from "next";
 const BASE_URL =
   process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
 
-const DEFAULT_IMAGE = `${BASE_URL}/og-postdepot-default.jpg`;
+const DEFAULT_IMAGE = `${BASE_URL}/og-techno-traders-default.jpg`;
 
 function isAbsoluteUrl(url: string): boolean {
   return /^https?:\/\//i.test(url);
 }
 
 /**
- * Default global metadata for PostDepot
+ * Default global metadata for Techno Traders LMS
  */
 const defaultMetadata: Metadata = {
   metadataBase: new URL(BASE_URL),
 
   title: {
-    default: "PostDepot – Enterprise Transactional Email Delivery Platform",
-    template: "%s - PostDepot",
+    default: "Techno Traders – Trading Education & Community LMS",
+    template: "%s - Techno Traders",
   },
 
   description:
-    "PostDepot is a high-performance transactional email infrastructure designed for reliable inbox placement, SMTP reputation protection, and large-scale email dispatch across major providers.",
+    "Techno Traders is a modern learning management system offering trading education, private community discussions, real-time chat, and collaborative learning for subscribed users.",
 
   openGraph: {
     type: "website",
     locale: "en_US",
     url: BASE_URL,
-    siteName: "PostDepot",
-    title: "PostDepot – Enterprise Transactional Email Delivery Platform",
+    siteName: "Techno Traders",
+    title: "Techno Traders – Trading Education & Community LMS",
     description:
-      "Send, monitor, and control high-volume transactional emails with queue-based dispatching, domain-aware throttling, and enterprise-grade deliverability.",
+      "Learn, discuss, and grow with Techno Traders. A private LMS platform featuring trading education, a global community forum, real-time discussions, and collaborative learning tools.",
     images: [
       {
         url: DEFAULT_IMAGE,
         width: 1200,
         height: 630,
-        alt: "PostDepot – Enterprise Transactional Email Delivery Platform",
+        alt: "Techno Traders – Trading Education & Community LMS",
       },
     ],
   },
 
   twitter: {
     card: "summary_large_image",
-    site: "@PostDepot",
-    creator: "@PostDepot",
-    title: "PostDepot – Enterprise Transactional Email Delivery Platform",
+    site: "@TechnoTraders",
+    creator: "@TechnoTraders",
+    title: "Techno Traders – Trading Education & Community LMS",
     description:
-      "A high-throughput transactional email platform built for reliability, deliverability, and control. Powered by SES, queues, and intelligent throttling.",
+      "A private LMS and community platform for traders. Access courses, engage in discussions, and collaborate in real time within the Techno Traders ecosystem.",
     images: [DEFAULT_IMAGE],
   },
 
@@ -72,7 +72,7 @@ const defaultMetadata: Metadata = {
     canonical: BASE_URL,
   },
 
-  category: "Transactional Email, Email Infrastructure & Deliverability",
+  category: "Trading Education, Learning Management System, Community Platform",
 };
 
 /**
@@ -93,11 +93,11 @@ export function generatePageMetadata(options?: {
     schemaType = "SoftwareApplication",
   } = options || {};
 
-  const fullTitle = title ? `${title} - PostDepot` : "PostDepot";
+  const fullTitle = title ? `${title} - Techno Traders` : "Techno Traders";
 
   const metaDescription =
     description ||
-    "PostDepot is an enterprise transactional email platform providing high-volume dispatch, inbox placement optimization, and SMTP reputation protection.";
+    "Techno Traders is a private LMS platform offering trading education, community forums, real-time chat, and collaborative learning for traders.";
 
   /**
    * Structured data (Schema.org)
@@ -105,18 +105,18 @@ export function generatePageMetadata(options?: {
   const structuredData = {
     "@context": "https://schema.org",
     "@type": schemaType,
-    name: title || "PostDepot – Enterprise Transactional Email Delivery Platform",
+    name: title || "Techno Traders – Trading Education & Community LMS",
     description: metaDescription,
     url: isAbsoluteUrl(url) ? url : `${BASE_URL}${url}`,
     image: isAbsoluteUrl(image) ? image : `${BASE_URL}${image}`,
-    applicationCategory: "EmailApplication",
+    applicationCategory: "EducationalApplication",
     operatingSystem: "Web",
     publisher: {
       "@type": "Organization",
-      name: "PostDepot",
+      name: "Techno Traders",
       logo: {
         "@type": "ImageObject",
-        url: `${BASE_URL}/postdepot-logo.png`,
+        url: `${BASE_URL}/techno-traders-logo.png`,
       },
     },
     inLanguage: "en",
@@ -138,7 +138,7 @@ export function generatePageMetadata(options?: {
           url: image,
           width: 1200,
           height: 630,
-          alt: title || "PostDepot – Enterprise Transactional Email Delivery Platform",
+          alt: title || "Techno Traders – Trading Education & Community LMS",
         },
       ],
     },
