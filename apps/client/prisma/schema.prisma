@@ -1,0 +1,282 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enums
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  CONVERTED
+  UNQUALIFIED
+}
+
+enum Source {
+  MANNUAL
+  IMPORTED
+}
+
+enum MailStatus {
+  IDLE
+  SENT
+  BOUNCED
+  FAILED
+  BANNED
+  COMPLAINT
+}
+
+enum CampaignStatus {
+  DRAFT
+  SCHEDULED
+  RUNNING
+  PAUSED
+  COMPLETED
+  FAILED
+}
+
+enum CampaignRecipientStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
+enum ContentMode {
+  HTML
+  PLAIN
+  ATTACHMENT
+  HTML_AND_ATTACHMENT
+  PLAIN_AND_ATTACHMENT
+}
+
+enum CampaignLogLevel {
+  INFO
+  WARN
+  ERROR
+}
+
+// User Model & its helpers
+model User {
+  id             String          @id
+  name           String
+  email          String
+  emailVerified  Boolean         @default(false)
+  image          String?
+  role           UserRole        @default(USER)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @default(now()) @updatedAt
+  sessions       Session[]
+  accounts       Account[]
+  leads          Lead[]
+  emailTemplates EmailTemplate[]
+  campaigns      Campaign[]
+
+  dailyEmailLimit  Int      @default(10000)
+  emailsSentToday  Int      @default(0)
+  lastQuotaResetAt DateTime @default(now())
+
+  @@unique([email])
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now()) @updatedAt
+
+  @@map("verification")
+}
+
+// Leads Model
+model Lead {
+  id   String @id @default(cuid())
+  name String
+
+  email       String
+  countryCode String?
+  phoneNumber String?
+  notes       String?
+
+  source     Source     @default(MANNUAL)
+  status     LeadStatus @default(NEW)
+  mailStatus MailStatus @default(IDLE)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @default(now()) @updatedAt
+  campaignRecipients CampaignRecipient[]
+
+  @@unique([userId, email])
+  @@index([userId])
+}
+
+model TemplateAttachment {
+  id String @id @default(cuid())
+
+  templateId String
+  template   EmailTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  path String // storage path or key
+  name String
+  mime String
+  size Int
+
+  createdAt DateTime @default(now())
+
+  @@index([templateId])
+}
+
+// Email Template Model
+model EmailTemplate {
+  id      String @id @default(cuid())
+  name    String
+  subject String
+
+  html        String
+  text        String?
+  // textFallback String?
+  variables   String[]    @default([])
+  contentMode ContentMode @default(HTML)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  campaigns Campaign[]
+
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  templateAttachments TemplateAttachment[]
+
+  @@index([userId])
+}
+
+// Campaign Model & its helpers
+model Campaign {
+  id     String         @id @default(cuid())
+  name   String
+  status CampaignStatus @default(DRAFT)
+
+  subject      String
+  senderName   String
+  senderDomain String
+
+  totalCount  Int @default(0)
+  sentCount   Int @default(0)
+  failedCount Int @default(0)
+
+  templateId String?
+  template   EmailTemplate? @relation(fields: [templateId], references: [id])
+
+  recipients CampaignRecipient[]
+
+  scheduledAt DateTime?
+  startedAt   DateTime?
+  completedAt DateTime?
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @default(now()) @updatedAt
+  campaignLogs CampaignLog[]
+
+  @@index([userId])
+  @@index([status])
+}
+
+model CampaignRecipient {
+  id String @id @default(cuid())
+
+  campaignId String
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  leadId String
+  lead   Lead   @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  email  String
+  status CampaignRecipientStatus @default(PENDING)
+
+  /**
+   * Failure tracking
+   */
+  error    String?
+  attempts Int     @default(0)
+
+  /**
+   * Timestamps
+   */
+  sentAt    DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @default(now()) @updatedAt
+
+  @@unique([campaignId, leadId])
+  @@index([campaignId, status])
+}
+
+model CampaignLog {
+  id         String   @id @default(cuid())
+  campaignId String
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  level   CampaignLogLevel
+  message String
+  meta    Json?
+
+  jobId String?
+  recipientId String?
+  event String?
+
+  timestamp DateTime @default(now())
+  createdAt DateTime @default(now())
+
+  @@index([campaignId, createdAt])
+}
