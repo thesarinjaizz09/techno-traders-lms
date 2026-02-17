@@ -44,7 +44,7 @@ export const SIDEBAR_MAIN_NAVIGATION = [
   // },
 
   /* =======================
-     AUDIENCE
+     COMMUNITY
      ======================= */
   {
     title: "Community",
@@ -52,7 +52,7 @@ export const SIDEBAR_MAIN_NAVIGATION = [
     icon: Users,
     items: [
       {
-        title: "Forums",
+        title: "Global",
         url: "/forum",
       },
     ],

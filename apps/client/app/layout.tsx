@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { NuqsAdapter } from 'nuqs/adapters/next/app'
 import { Provider } from "jotai";
 import "./globals.css";
+import { SocketProvider } from "@/providers/socket-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,7 +37,9 @@ export default function RootLayout({
         <TRPCReactProvider>
           <NuqsAdapter>
             <Provider>
-              {children}
+              <SocketProvider>
+                {children}
+              </SocketProvider>
               <Toaster richColors />
             </Provider>
           </NuqsAdapter>
