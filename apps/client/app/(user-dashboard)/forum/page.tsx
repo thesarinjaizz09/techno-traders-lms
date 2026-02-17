@@ -7,7 +7,7 @@ import { prefetchMessages } from "@/features/forum/server/prefetch"
 import Forum from "@/features/forum/components/forum"
 
 export const metadata = generatePageMetadata({
-  title: "Campaigns",
+  title: "Forum",
   description:
     "Create, schedule, and manage email campaigns with full control over recipients, templates, sending limits, and delivery performance. Track real-time progress, failures, and outcomes across campaigns in a unified PostDepot workspace.",
   image: "/og-campaigns.jpg",

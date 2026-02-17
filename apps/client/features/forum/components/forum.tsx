@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Bell,
   Hash,
@@ -141,13 +141,22 @@ export default function Forum() {
   const cache = useMessagesCache();
   const { data: user } = useCurrentUser();
   const { socket, connected } = useSocket();
+  const messagesContainerRef = useRef<HTMLDivElement | null>(null);
   const { data: serverMessages, isLoading } = useMessages()
-
-  console.log("Fetched messages from server:", serverMessages);
 
   const [activeChannel, setActiveChannel] = useState(channels[0]?.id ?? "global-floor");
   const [composer, setComposer] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>(serverMessages?.pages[0].items ?? []);
+
+  useEffect(() => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    container.scrollTo({
+      top: container.scrollHeight,
+      behavior: "smooth",
+    });
+  }, [messages]);
 
   useEffect(() => {
     setMessages(serverMessages?.pages[0].items ?? []);
@@ -302,7 +311,7 @@ export default function Forum() {
             </div>
           </div>
 
-          <div className="flex-1 space-y-1.5 overflow-y-auto p-3 sm:p-4 max-h-[76.5vh] scrollbar-thin scrollbar-thumb-rounded-sm scrollbar-thumb-muted/50">
+          <div ref={messagesContainerRef} className="flex-1 space-y-1.5 overflow-y-auto p-3 sm:p-4 max-h-[76.5vh] scrollbar-thin scrollbar-thumb-rounded-sm scrollbar-thumb-muted/50">
             <div className="flex items-center justify-center mb-5">
               <Badge variant="secondary" className="rounded-full px-3 py-1 text-[11px]">
                 Session Started - Today
