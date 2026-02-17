@@ -139,59 +139,6 @@ function initials(name: string) {
     .toUpperCase();
 }
 
-function ChannelsPanel({
-  activeChannel,
-  setActiveChannel,
-}: {
-  activeChannel: string;
-  setActiveChannel: (id: string) => void;
-}) {
-  return (
-    <Card className="h-full gap-0 overflow-hidden border-border/80 bg-card/60 py-0 backdrop-blur-sm">
-      <div className="border-b p-4">
-        <p className="text-sm font-semibold tracking-wide">Community Channels</p>
-        <p className="mt-1 text-xs text-muted-foreground">Pick one space to focus discussion.</p>
-        <div className="relative mt-3">
-          <Search className="text-muted-foreground absolute top-2.5 left-2 size-4" />
-          <Input placeholder="Search channels..." className="pl-8" />
-        </div>
-      </div>
-
-      <div className="space-y-1 p-2">
-        {channels.map((channel) => {
-          const active = channel.id === activeChannel;
-
-          return (
-            <button
-              key={channel.id}
-              type="button"
-              onClick={() => setActiveChannel(channel.id)}
-              className={`w-full rounded-md border px-3 py-2 text-left transition ${
-                active
-                  ? "border-primary/40 bg-primary/10"
-                  : "border-transparent hover:border-border hover:bg-accent/40"
-              }`}
-            >
-              <div className="flex items-center justify-between gap-2">
-                <span className="inline-flex items-center gap-1.5 text-sm font-medium">
-                  <Hash className="size-3.5" />
-                  {channel.name}
-                </span>
-                {channel.unread ? (
-                  <Badge className="h-5 rounded-full px-2 text-[11px]">{channel.unread}</Badge>
-                ) : null}
-              </div>
-              <p className="mt-1 line-clamp-1 text-[11.5px] text-muted-foreground">
-                {channel.description}
-              </p>
-            </button>
-          );
-        })}
-      </div>
-    </Card>
-  );
-}
-
 function MembersPanel() {
   return (
     <Card className="h-full gap-0 overflow-hidden border-border/80 bg-card/60 py-0 backdrop-blur-sm">
@@ -226,13 +173,12 @@ function MembersPanel() {
               <div key={member.name} className="flex items-center justify-between rounded-md px-2 py-1.5">
                 <div className="flex items-center gap-2">
                   <span
-                    className={`size-2 rounded-full ${
-                      live
-                        ? "bg-emerald-500"
-                        : member.status === "Away"
-                          ? "bg-amber-500"
-                          : "bg-primary"
-                    }`}
+                    className={`size-2 rounded-full ${live
+                      ? "bg-emerald-500"
+                      : member.status === "Away"
+                        ? "bg-amber-500"
+                        : "bg-primary"
+                      }`}
                   />
                   <div>
                     <p className="text-xs font-medium">{member.name}</p>
@@ -288,15 +234,11 @@ export default function ForumPage() {
   };
 
   return (
-    <div className={`${openSans.className} relative min-h-[calc(100svh-var(--header-height))] p-3 sm:p-4 md:p-6`}>
+    <div className={`${openSans.className} relative h-full p-1 sm:p-4 md:px-1.5 md:py-2`}>
       <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,oklch(0.72_0.17_293/.12),transparent_42%),radial-gradient(circle_at_bottom_right,oklch(0.71_0.2_160/.08),transparent_40%)]" />
 
-      <div className="grid min-h-[calc(100svh-var(--header-height)-1.5rem)] grid-cols-1">
-        {/* <div className="hidden lg:block">
-          <ChannelsPanel activeChannel={activeChannel} setActiveChannel={setActiveChannel} />
-        </div> */}
-
-        <Card className="relative flex h-full min-h-[70vh] flex-col gap-0 overflow-hidden border-border/80 bg-card/70 py-0 backdrop-blur-md">
+      <div className="grid h-full grid-cols-1">
+        <Card className="relative flex h-full min-h-[70vh] flex-col gap-0 overflow-hidden border-border/80 bg-card/70 py-0 backdrop-blur-md rounded-sm">
           <div className="flex items-center justify-between border-b px-3 py-2.5 sm:px-4">
             <div className="min-w-0">
               <p className="flex items-center gap-2 text-sm font-semibold tracking-wide sm:text-base">
@@ -307,22 +249,6 @@ export default function ForumPage() {
             </div>
 
             <div className="flex items-center gap-1">
-              <Sheet>
-                <SheetTrigger asChild>
-                  <Button variant="ghost" size="icon" className="lg:hidden" aria-label="Open channels">
-                    <Menu className="size-4" />
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="left" className="p-0">
-                  <SheetHeader className="border-b">
-                    <SheetTitle>Channels</SheetTitle>
-                  </SheetHeader>
-                  <div className="p-3">
-                    <ChannelsPanel activeChannel={activeChannel} setActiveChannel={setActiveChannel} />
-                  </div>
-                </SheetContent>
-              </Sheet>
-
               <Button variant="ghost" size="icon" aria-label="Pinned notes">
                 <Pin className="size-4" />
               </Button>
@@ -351,7 +277,7 @@ export default function ForumPage() {
             </div>
           </div>
 
-          <div className="flex-1 space-y-3 overflow-y-auto p-3 sm:p-4">
+          <div className="flex-1 space-y-3 overflow-y-auto p-3 sm:p-4 max-h-[76.5vh]">
             <div className="flex items-center justify-center">
               <Badge variant="secondary" className="rounded-full px-3 py-1 text-[11px]">
                 Session Started - Today
@@ -370,11 +296,10 @@ export default function ForumPage() {
                   ) : null}
 
                   <div
-                    className={`max-w-[85%] space-y-1 rounded-xl border px-3 py-2 sm:max-w-[72%] ${
-                      mine
-                        ? "border-primary/30 bg-primary/10"
-                        : "border-border/80 bg-background/50"
-                    }`}
+                    className={`max-w-[85%] space-y-1 rounded-xl border px-3 py-2 sm:max-w-[72%] ${mine
+                      ? "border-primary/30 bg-primary/10"
+                      : "border-border/80 bg-background/50"
+                      }`}
                   >
                     <div className="flex items-center gap-2 text-xs">
                       <span className={`font-semibold ${roleTone(item.role)}`}>{item.user}</span>
@@ -402,8 +327,20 @@ export default function ForumPage() {
             })}
           </div>
 
-          <div className="border-t bg-background/65 p-3 sm:p-4">
-            <div className="rounded-xl border bg-card/80 p-2">
+          <div className="border-t bg-background/65 p-2 sm:p-3">
+            <div className="flex items-center justify-between rounded-sm border bg-card/80 p-2 gap-2">
+              <div className="flex items-center bg-muted-foreground/10 rounded-sm py-0.5">
+                <Button variant="ghost" size="icon-sm" aria-label="Attach file">
+                  <Paperclip className="size-4" />
+                </Button>
+                <Button variant="ghost" size="icon-sm" aria-label="Emoji">
+                  <Smile className="size-4" />
+                </Button>
+                <Button variant="ghost" size="icon-sm" aria-label="Voice input">
+                  <Mic className="size-4" />
+                </Button>
+              </div>
+
               <Textarea
                 value={composer}
                 onChange={(event) => setComposer(event.target.value)}
@@ -414,37 +351,15 @@ export default function ForumPage() {
                   }
                 }}
                 placeholder={`Message #${channel?.name}`}
-                className="max-h-40 min-h-16 resize-none border-none bg-transparent p-2 text-sm shadow-none focus-visible:ring-0"
+                className="rounded-sm max-h-40 min-h-8 resize-none border-none bg-transparent p-2 px-3 text-sm shadow-none focus-visible:ring-0"
               />
 
-              <div className="mt-1 flex items-center justify-between">
-                <div className="flex items-center gap-1">
-                  <Button variant="ghost" size="icon-sm" aria-label="Attach file">
-                    <Paperclip className="size-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon-sm" aria-label="Emoji">
-                    <Smile className="size-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon-sm" aria-label="Voice input">
-                    <Mic className="size-4" />
-                  </Button>
-                </div>
-
-                <Button onClick={sendMessage} disabled={!composer.trim()} className="gap-1.5">
-                  Send
-                  <SendHorizontal className="size-4" />
-                </Button>
-              </div>
+              <Button onClick={sendMessage} disabled={!composer.trim()} className="gap-1.5 py-0.5">
+                <SendHorizontal className="size-4" />
+              </Button>
             </div>
-            <p className="mt-2 text-[11px] text-muted-foreground">
-              Press Enter to send, Shift + Enter for newline.
-            </p>
           </div>
         </Card>
-
-        <div className="hidden 2xl:block">
-          <MembersPanel />
-        </div>
       </div>
     </div>
   );
