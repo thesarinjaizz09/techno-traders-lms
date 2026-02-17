@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 // Load environment variables from .env file (if present)
 dotenv.config();
 
-import cookie from 'cookie';
+import { parse as parseCookie } from "cookie";
 import { Server } from "socket.io";
 import { createAdapter } from "@socket.io/redis-adapter";
 import { redisPub, redisSub } from "./redis"; // Your ioredis clients (already separate instances)
@@ -69,38 +69,44 @@ export async function setupSocket(httpServer: any) {
     // Global middleware – authentication
     // ────────────────────────────────────────────────
     io.use(async (socket, next) => {
+        console.log("🔐 Socket auth middleware start");
+
         try {
             const rawCookie = socket.handshake.headers.cookie;
+
             if (!rawCookie) {
+                console.log("❌ No cookies");
                 return next(new Error("No cookies"));
             }
 
-            const cookies = cookie.parse(rawCookie);
+            const cookies = parseCookie(rawCookie);
 
-            const sessionToken = cookies["better-auth.session"];
+            const sessionToken = cookies["better-auth.session_token"]?.substring(0, cookies["better-auth.session_token"].indexOf(".")) || null;
+
             if (!sessionToken) {
                 return next(new Error("Not authenticated"));
             }
 
-            // Validate session
             const session = await prisma.session.findUnique({
                 where: { token: sessionToken },
                 include: { user: true },
             });
 
+
             if (!session || session.expiresAt < new Date()) {
                 return next(new Error("Session expired"));
             }
 
-            // ✅ Attach user to socket
             socket.data.user = {
                 id: session.user.id,
                 name: session.user.name,
                 role: session.user.role,
             };
 
+            console.log("✅ Socket authenticated:", socket.data.user.name || socket.data.user.id);
             next();
         } catch (err) {
+            console.error("🔥 Socket auth failed:", err);
             next(new Error("Authentication failed"));
         }
     });
@@ -131,15 +137,16 @@ export async function setupSocket(httpServer: any) {
             // 1. Validate input
             const schema = z.object({
                 content: z.string().min(1).max(2000).trim(),
+                clientMessageId: z.string().optional(), // for optimistic updates
             });
 
             const result = schema.safeParse(payload);
             if (!result.success) {
-                socket.emit("message:error", { message: "Invalid message", errors: result.error.format() });
+                socket.emit("message:error", { message: "Invalid message", errors: result.error });
                 return;
             }
 
-            const { content } = result.data;
+            const { content, clientMessageId } = result.data;
 
             // 2. Basic rate limit (using your redisPub)
             try {
@@ -156,15 +163,35 @@ export async function setupSocket(httpServer: any) {
                 const message = await prisma.message.create({
                     data: {
                         content,
-                        userId,
+                        userId: user.id,
                     },
                     include: {
-                        user: true
+                        user: {
+                            select: {
+                                id: true,
+                                name: true,
+                            },
+                        },
                     },
                 });
 
+                const payload = {
+                    id: message.id,
+                    userId: message.user.id,
+                    clientMessageId, // echo back for optimistic update correlation
+                    user: message.user.name,
+                    role: "member", // client decides "you"
+                    message: message.content,
+                    time: message.createdAt.toLocaleTimeString("en-IN", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        hour12: false,
+                    }),
+                };
+
                 // 4. Broadcast via Socket.IO → Redis adapter handles propagation
-                io.to(GLOBAL_ROOM).emit("message:new", message);
+                io.to(GLOBAL_ROOM).emit("message:new", payload);
+                console.log(`Message sent by ${userId}: ${content}`);
 
             } catch (err) {
                 console.error("Failed to process message:", err);

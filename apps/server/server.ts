@@ -28,9 +28,10 @@ const app = fastify({
 // Register plugins & routes
 async function registerPlugins() {
     await app.register(cors, {
-        origin: process.env.CORS_ORIGIN?.split(",") || true, // More secure than "*"
+        origin: process.env.CORS_ORIGIN?.split(",") || "http://localhost:3000", // More secure than "*"
         methods: ["GET", "POST", "OPTIONS"],
         allowedHeaders: ["Content-Type", "Authorization"],
+        credentials: true,
     });
 
     // await app.register(messagesRoutes, { prefix: "/api" }); // Assuming API prefix — adjust if needed
