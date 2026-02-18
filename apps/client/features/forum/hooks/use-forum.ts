@@ -11,7 +11,8 @@ import type { inferRouterOutputs } from "@trpc/server";
 import type { AppRouter } from "@/trpc/routers/_app"; // ← adjust to your root router path
 
 // ────────────────────────────────────────────────
-// Infer exact types from tRPC router (strongly recommended)
+// Infer exact types from tRPC router
+// ────────────────────────────────────────────────
 type RouterOutput = inferRouterOutputs<AppRouter>;
 type MessagesInfinite = RouterOutput["messages"]["getInfinite"];
 

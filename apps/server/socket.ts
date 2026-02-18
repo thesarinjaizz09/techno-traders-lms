@@ -1,15 +1,12 @@
-// socket.ts
 import dotenv from "dotenv";
-
-// Load environment variables from .env file (if present)
 dotenv.config();
 
 import { parse as parseCookie } from "cookie";
 import { Server } from "socket.io";
 import { createAdapter } from "@socket.io/redis-adapter";
-import { redisPub, redisSub } from "./redis"; // Your ioredis clients (already separate instances)
+import { redisPub, redisSub } from "./redis";
 import { prisma } from "./prisma";
-import { z } from "zod"; // For validation (npm i zod if not installed)
+import { z } from "zod";
 
 type AuthenticatedUser = {
     id: string;
@@ -40,7 +37,6 @@ redisPub.on("connect", () => console.log("[Redis] Pub connected"));
 redisSub.on("connect", () => console.log("[Redis] Sub connected"));
 
 export async function setupSocket(httpServer: any) {
-    // ioredis connects lazily, but ensure they're ready (optional in most cases)
     try {
         await Promise.all([
             redisPub.ping().catch(() => null), // Quick health check
@@ -49,7 +45,6 @@ export async function setupSocket(httpServer: any) {
         console.log("Redis clients ready");
     } catch (err) {
         console.error("Redis health check failed:", err);
-        // In production, you might want to exit or fallback
     }
 
     const io = new Server<any, any, any, SocketData>(httpServer, {
@@ -61,7 +56,6 @@ export async function setupSocket(httpServer: any) {
         connectionStateRecovery: {
             maxDisconnectionDuration: 2 * 60 * 1000, // 2 minutes
         },
-        // Use your ioredis clients with the adapter (replaces manual pub/sub)
         adapter: createAdapter(redisPub, redisSub),
     });
 
@@ -69,13 +63,10 @@ export async function setupSocket(httpServer: any) {
     // Global middleware – authentication
     // ────────────────────────────────────────────────
     io.use(async (socket, next) => {
-        console.log("🔐 Socket auth middleware start");
-
         try {
             const rawCookie = socket.handshake.headers.cookie;
 
             if (!rawCookie) {
-                console.log("❌ No cookies");
                 return next(new Error("No cookies"));
             }
 
@@ -103,10 +94,10 @@ export async function setupSocket(httpServer: any) {
                 role: session.user.role,
             };
 
-            console.log("✅ Socket authenticated:", socket.data.user.name || socket.data.user.id);
+            console.log("Socket authenticated:", socket.data.user.name || socket.data.user.id);
             next();
         } catch (err) {
-            console.error("🔥 Socket auth failed:", err);
+            console.error("Socket auth failed:", err);
             next(new Error("Authentication failed"));
         }
     });
@@ -124,10 +115,9 @@ export async function setupSocket(httpServer: any) {
         const userId = user.id;
         console.log(`User connected → ${userId} (${socket.id})`);
 
-        // Join global room
         socket.join(GLOBAL_ROOM);
 
-        // Optional: broadcast user joined (with spam control in prod)
+        // Optional: broadcast user joined event
         // io.to(GLOBAL_ROOM).emit("user:joined", { id: userId, username: user.username });
 
         // ─── Rate limiting key per user ───
@@ -148,7 +138,7 @@ export async function setupSocket(httpServer: any) {
 
             const { content, clientMessageId } = result.data;
 
-            // 2. Basic rate limit (using your redisPub)
+            // 2. Basic rate limit (using redisPub)
             try {
                 const current = await redisPub.incr(rateKey);
                 if (current === 1) {
@@ -191,8 +181,6 @@ export async function setupSocket(httpServer: any) {
 
                 // 4. Broadcast via Socket.IO → Redis adapter handles propagation
                 io.to(GLOBAL_ROOM).emit("message:new", payload);
-                console.log(`Message sent by ${userId}: ${content}`);
-
             } catch (err) {
                 console.error("Failed to process message:", err);
                 socket.emit("message:error", { message: "Failed to send message" });

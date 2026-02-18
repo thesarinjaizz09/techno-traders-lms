@@ -1,14 +1,12 @@
 // redis.ts
 import dotenv from "dotenv";
-
-// Load environment variables from .env file (if present)
 dotenv.config();
 
 import Redis, { Redis as RedisClient, RedisOptions } from 'ioredis';
-import logger from './logger'; // ← Replace with your actual logger (pino, winston, etc.)
+import logger from './logger';
 
 // ────────────────────────────────────────────────
-// Central configuration (ideally move to env + config loader later)
+// Central configuration
 // ────────────────────────────────────────────────
 const REDIS_URL = process.env.REDIS_URL;
 
@@ -16,18 +14,14 @@ if (!REDIS_URL) {
     throw new Error('REDIS_URL environment variable is required');
 }
 
-// Common options for both pub & sub clients
 const baseOptions: RedisOptions = {
-    // Parse connection string automatically (redis://, rediss://, sentinel:// etc.)
-    // ioredis supports it natively
     connectionName: 'chat-backend',
 
-    // Recommended reconnection strategy (exponential backoff + cap)
     retryStrategy: (times: number) => {
         // After ~10 attempts (~1 min total), give up and let the app crash/restart
         if (times > 10) {
             logger.error(`Redis reconnection failed after ${times} attempts`);
-            return null; // stop retrying → triggers 'error' event
+            return null;
         }
         const delay = Math.min(times * 50, 2000); // 50ms → 2s max
         logger.warn(`Redis reconnect attempt ${times} in ${delay}ms`);
@@ -45,8 +39,6 @@ const baseOptions: RedisOptions = {
 
     // Show friendly errors in stack traces (production: false to hide internals)
     showFriendlyErrorStack: process.env.NODE_ENV !== 'production',
-
-    // TLS / auth settings are handled automatically if using rediss:// or password in URL
 };
 
 // ────────────────────────────────────────────────
@@ -55,15 +47,13 @@ const baseOptions: RedisOptions = {
 export const redisPub = new Redis(REDIS_URL, {
     ...baseOptions,
     connectionName: 'chat-pub',
-    // Pub client usually doesn't need offline queue as aggressively
     enableOfflineQueue: false,
-    maxRetriesPerRequest: null, // unlimited for publishes (critical)
+    maxRetriesPerRequest: null
 });
 
 export const redisSub = new Redis(REDIS_URL, {
     ...baseOptions,
     connectionName: 'chat-sub',
-    // Sub client benefits from offline queue for missed messages during reconnect
     enableOfflineQueue: true,
 });
 
@@ -81,7 +71,6 @@ function setupRedisEvents(client: RedisClient, name: string) {
 
     client.on('error', (err) => {
         logger.error(`${name} Redis error: ${err.message}`);
-        // In production you might want to send to Sentry/Datadog/etc.
     });
 
     client.on('close', () => {
@@ -94,16 +83,11 @@ function setupRedisEvents(client: RedisClient, name: string) {
 
     client.on('end', () => {
         logger.error(`${name} Redis connection ended permanently`);
-        // Here you might want to gracefully shutdown the app
-        // or notify admin via alert
     });
 }
 
 setupRedisEvents(redisPub, 'Pub');
 setupRedisEvents(redisSub, 'Sub');
-
-// Optional: Lazy connect on first use (already default, but explicit)
-// You can await redisPub.connect() in your app bootstrap if you want eager connection
 
 // ────────────────────────────────────────────────
 // Graceful shutdown hook
@@ -125,7 +109,6 @@ async function shutdownRedis() {
     logger.info('Redis clients closed');
 }
 
-// Attach to process signals (use in your main server file or here)
 process.on('SIGTERM', async () => {
     await shutdownRedis();
     process.exit(0);

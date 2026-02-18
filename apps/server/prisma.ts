@@ -1,18 +1,15 @@
 import dotenv from "dotenv";
-
-// Load environment variables from .env file (if present)
 dotenv.config();
 
 import { PrismaClient } from "../client/lib/generated/prisma/client"
 
 // ────────────────────────────────────────────────
-// Singleton pattern to prevent multiple instances (critical in Next.js / hot-reload / serverless)
+// Singleton pattern to prevent multiple instances 
+// ────────────────────────────────────────────────
 const globalForPrisma = global as unknown as {
     prisma: PrismaClient | undefined;
 };
 
-// In production we want one instance.
-// In development we still want one instance per process (avoids hot-reload warnings).
 let prisma: PrismaClient;
 
 if (!globalForPrisma.prisma) {
@@ -25,7 +22,7 @@ if (!globalForPrisma.prisma) {
         // Optional: enable in production only if you use tracing/observability
         // errorFormat: "pretty", // or "colorless" / "minimal"
 
-        // Optional: datasource override (rarely needed)
+        // Optional: datasource override
         // datasources: { db: { url: process.env.DATABASE_URL } },
     });
 
@@ -39,7 +36,7 @@ if (!globalForPrisma.prisma) {
 
 // ────────────────────────────────────────────────
 // Graceful shutdown — very important in containers / orchestrated environments
-// Handles SIGINT (Ctrl+C), SIGTERM (docker stop, k8s termination), etc.
+// ────────────────────────────────────────────────
 async function shutdownPrisma(signal: string) {
     console.log(`[${signal}] Received. Disconnecting Prisma...`);
 
@@ -49,16 +46,12 @@ async function shutdownPrisma(signal: string) {
     } catch (err) {
         console.error("Error during Prisma disconnect:", err);
     }
-
-    // Do NOT call process.exit() here unless you're sure no other cleanup is needed
-    // Let the process handle it naturally after all handlers finish
 }
 
 ["SIGINT", "SIGTERM", "SIGQUIT"].forEach((signal) => {
     process.on(signal, () => shutdownPrisma(signal));
 });
 
-// Optional: Handle uncaught exceptions / rejections (last line of defense)
 process.on("uncaughtException", (err) => {
     console.error("Uncaught Exception:", err);
     shutdownPrisma("uncaughtException").finally(() => process.exit(1));
@@ -66,12 +59,11 @@ process.on("uncaughtException", (err) => {
 
 process.on("unhandledRejection", (reason, promise) => {
     console.error("Unhandled Rejection at:", promise, "reason:", reason);
-    // Optionally shutdownPrisma("unhandledRejection") — but usually just log
 });
 
 // ────────────────────────────────────────────────
 // Optional: Connection health check / warm-up (useful in cold-start environments)
-// You can call this in your server bootstrap if desired
+// ────────────────────────────────────────────────
 export async function ensurePrismaConnected() {
     try {
         await prisma.$connect(); // Explicit connect (normally lazy)
@@ -82,8 +74,4 @@ export async function ensurePrismaConnected() {
     }
 }
 
-// Export the singleton
 export { prisma };
-
-// Optional: re-export common prisma methods for convenience (if you like this style)
-// export const db = prisma;

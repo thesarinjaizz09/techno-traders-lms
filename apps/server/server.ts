@@ -1,51 +1,51 @@
-// server.ts (or index.ts — your main entrypoint)
 import dotenv from "dotenv";
-
-// Load environment variables from .env file (if present)
 dotenv.config();
 
 import fastify from "fastify";
 import cors from "@fastify/cors";
 import { setupSocket } from "./socket";
-import logger from "./logger"; // Your Pino logger from previous setup
-import { prisma } from "./prisma"; // Your Prisma client
-import { redisPub, redisSub } from "./redis"; // Your Redis clients
-import { ensurePrismaConnected } from "./prisma"; // Optional warm-up from Prisma setup
+import logger from "./logger";
+import { prisma } from "./prisma";
+import { redisPub, redisSub } from "./redis";
+import { ensurePrismaConnected } from "./prisma";
 
 // ────────────────────────────────────────────────
 // Configuration (pull from env for prod)
+// ────────────────────────────────────────────────
 const PORT = parseInt(process.env.PORT || "4000", 10);
 const HOST = process.env.HOST || "localhost";
 
 // ────────────────────────────────────────────────
 // Fastify instance with production defaults
+// ────────────────────────────────────────────────
 const app = fastify({
-    logger: false, // We'll use our custom logger instead of Fastify's built-in
-    disableRequestLogging: true, // Disable if using pino-http or custom middleware later
+    logger: false,
+    disableRequestLogging: true
 });
 
 // ────────────────────────────────────────────────
 // Register plugins & routes
+// ────────────────────────────────────────────────
 async function registerPlugins() {
     await app.register(cors, {
-        origin: process.env.CORS_ORIGIN?.split(",") || "http://localhost:3000", // More secure than "*"
+        origin: process.env.CORS_ORIGIN?.split(",") || "http://localhost:3000",
         methods: ["GET", "POST", "OPTIONS"],
         allowedHeaders: ["Content-Type", "Authorization"],
         credentials: true,
     });
 
-    // await app.register(messagesRoutes, { prefix: "/api" }); // Assuming API prefix — adjust if needed
+    // await app.register(messagesRoutes, { prefix: "/api" });
 }
 
 // ────────────────────────────────────────────────
 // Startup sequence
+// ────────────────────────────────────────────────
 async function startServer() {
     try {
         logger.info("Starting server bootstrap...");
 
         // 1. Warm up dependencies (DB, Redis) — fail fast if unavailable
-        await ensurePrismaConnected(); // From Prisma setup (optional but recommended)
-        // Redis connects lazily, but you could add ping checks here if desired
+        await ensurePrismaConnected();
 
         // 2. Register plugins & routes
         await registerPlugins();
@@ -68,6 +68,7 @@ async function startServer() {
 
 // ────────────────────────────────────────────────
 // Graceful shutdown coordinator
+// ────────────────────────────────────────────────
 async function shutdown(signal: string) {
     logger.info(`[${signal}] Shutting down gracefully...`);
 
@@ -76,7 +77,6 @@ async function shutdown(signal: string) {
         app.close().catch((err) => logger.error({ err }, "Error closing Fastify")),
 
         // Prisma disconnect (from its setup)
-        // Already handled in Prisma's process.on, but we can await here for sequencing
         prisma.$disconnect().catch((err) => logger.error({ err }, "Error disconnecting Prisma")),
 
         // Redis quit (from its setup — already has handlers, but explicit)
@@ -91,6 +91,7 @@ async function shutdown(signal: string) {
 
 // ────────────────────────────────────────────────
 // Attach shutdown handlers (coordinated — overrides/expands previous ones)
+// ────────────────────────────────────────────────
 ["SIGINT", "SIGTERM", "SIGQUIT"].forEach((signal) => {
     process.on(signal, () => shutdown(signal));
 });
@@ -108,6 +109,7 @@ process.on("unhandledRejection", (reason, promise) => {
 
 // ────────────────────────────────────────────────
 // Start the server
+// ────────────────────────────────────────────────
 startServer().catch((err) => {
     logger.fatal({ err }, "Bootstrap failed");
     process.exit(1);

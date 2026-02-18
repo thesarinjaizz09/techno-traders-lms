@@ -1,7 +1,4 @@
-// logger.ts
 import dotenv from "dotenv";
-
-// Load environment variables from .env file (if present)
 dotenv.config();
 
 import pino, { LoggerOptions } from 'pino';
@@ -24,15 +21,12 @@ const pinoOptions: LoggerOptions = {
             return {
                 pid: bindings.pid,
                 host: bindings.hostname,
-                // You can add more context here (app version, instance id, etc.)
             };
         },
     },
 
-    // Add timestamp in ISO format (most log systems expect this)
     timestamp: pino.stdTimeFunctions.isoTime,
 
-    // Redact sensitive fields automatically
     redact: [
         'req.headers.authorization',
         'req.headers.cookie',
@@ -40,11 +34,10 @@ const pinoOptions: LoggerOptions = {
         'token',
         'accessToken',
         'refreshToken',
-        'email',          // optional - depends on your privacy rules
+        'email',        
         'phone',
     ],
 
-    // Optional: custom serializers for common objects
     serializers: {
         req(req) {
             return {
@@ -65,7 +58,6 @@ const pinoOptions: LoggerOptions = {
 // ────────────────────────────────────────────────
 const logger = pino(
     pinoOptions,
-    // In development → pretty print with colors
     isProduction
         ? undefined
         : pretty({
@@ -76,8 +68,6 @@ const logger = pino(
         })
 );
 
-// Optional: Child loggers with context (very useful)
-// Example usage: const reqLogger = logger.child({ reqId: 'abc123' });
 export function createChildLogger(context: Record<string, unknown>) {
     return logger.child(context);
 }
@@ -93,11 +83,7 @@ export const log = {
     debug: logger.debug.bind(logger),
     trace: logger.trace.bind(logger),
 
-    // With context
     withContext: createChildLogger,
 };
 
 export default logger;
-
-// For HTTP request logging (if using express/fastify)
-// You can later do: app.use(pinoHttp({ logger }));
