@@ -99,11 +99,11 @@ export const messagesRouter = createTRPCRouter({
 
       // ─── Logging: End of query (metrics) ───
       const queryDuration = Date.now() - queryStart;
-      queryLogger.info({
-        itemsCount: items.length,
-        nextCursor: !!nextCursor,
-        durationMs: queryDuration,
-      }, "Messages fetched successfully");
+      // queryLogger.info({
+      //   itemsCount: items.length,
+      //   nextCursor: !!nextCursor,
+      //   durationMs: queryDuration,
+      // }, "Messages fetched successfully");
 
       // Optional: If queryDuration > threshold, alert (e.g., via Sentry)
       if (queryDuration > 500) {

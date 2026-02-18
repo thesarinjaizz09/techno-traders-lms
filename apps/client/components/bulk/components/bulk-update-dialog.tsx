@@ -1,13 +1,13 @@
 import { useState } from "react"
 import { useBulkSelection } from "../bulk-selection.context"
-import { LeadStatus } from "@/lib/generated/prisma/enums"
+// import { LeadStatus } from "@/lib/generated/prisma/enums"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { FileText, Flag } from "lucide-react"
 import { FieldLabel } from "@/components/ui/field"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Spinner } from "@/components/ui/spinner"
-import { useBulkUpdateLeads } from "@/features/customers/hooks/use-leads"
+// import { useBulkUpdateLeads } from "@/features/customers/hooks/use-leads"
 
 interface Props {
     open: boolean
@@ -16,27 +16,27 @@ interface Props {
 
 export const BulkUpdateLeadsDialog = ({ open, onClose }: Props) => {
     const { selectedIds, clear } = useBulkSelection()
-    const { mutateAsync, isPending } = useBulkUpdateLeads()
+    // const { mutateAsync, isPending } = useBulkUpdateLeads()
     const [notes, setNotes] = useState<string>("")
-    const [status, setStatus] = useState<LeadStatus>(LeadStatus.NEW)
+    // const [status, setStatus] = useState<LeadStatus>(LeadStatus.NEW)
 
-    const onUpdate = async () => {
-        if (!selectedIds.size || isPending) return
+    // const onUpdate = async () => {
+    //     if (!selectedIds.size || isPending) return
 
-        await mutateAsync({
-            ids: [...selectedIds],
-            notes,
-            status,
-        }, {
-            onSuccess: () => {
-                clear()
-                onClose()
-            },
-            onError: (error) => {
-                console.log("LEAD_UPDATE_ERROR: ", error)
-            },
-        })
-    }
+    //     await mutateAsync({
+    //         ids: [...selectedIds],
+    //         notes,
+    //         status,
+    //     }, {
+    //         onSuccess: () => {
+    //             clear()
+    //             onClose()
+    //         },
+    //         onError: (error) => {
+    //             console.log("LEAD_UPDATE_ERROR: ", error)
+    //         },
+    //     })
+    // }
 
     return (
         <Dialog open={open} onOpenChange={onClose}>
@@ -58,21 +58,21 @@ export const BulkUpdateLeadsDialog = ({ open, onClose }: Props) => {
 
                     <Select
                         value={status}
-                        onValueChange={(value) => {
-                            setStatus(value as LeadStatus)
-                        }}
+                        // onValueChange={(value) => {
+                        //     setStatus(value as LeadStatus)
+                        // }}
                     >
                         <SelectTrigger className="w-full">
                             <SelectValue placeholder="Select status" />
                         </SelectTrigger>
 
-                        <SelectContent>
+                        {/* <SelectContent>
                             {Object.values(LeadStatus).map((status) => (
                                 <SelectItem key={status} value={status}>
                                     {status}
                                 </SelectItem>
                             ))}
-                        </SelectContent>
+                        </SelectContent> */}
                     </Select>
                 </div>
 
@@ -90,7 +90,7 @@ export const BulkUpdateLeadsDialog = ({ open, onClose }: Props) => {
                 </div>
 
                 <DialogFooter>
-                    <Button variant="destructive" onClick={onClose} disabled={isPending}>
+                    {/* <Button variant="destructive" onClick={onClose} disabled={isPending}>
                         Cancel
                     </Button>
                     <Button onClick={onUpdate} disabled={isPending || !selectedIds.size || notes.length === 0 && !status}>
@@ -98,7 +98,7 @@ export const BulkUpdateLeadsDialog = ({ open, onClose }: Props) => {
                         {
                             isPending ? "Updating Customers..." : "Update Customers"
                         }
-                    </Button>
+                    </Button> */}
                 </DialogFooter>
             </DialogContent>
         </Dialog >

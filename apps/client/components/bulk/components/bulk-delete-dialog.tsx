@@ -3,25 +3,25 @@ import { useBulkSelection } from "../bulk-selection.context"
 import { Trash, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
-import { useBulkDeleteLeads } from "@/features/customers/hooks/use-leads"
+// import { useBulkDeleteLeads } from "@/features/customers/hooks/use-leads"
 
 export const BulkDeleteLeadsDialog = ({ open, onClose }: {
     open: boolean
     onClose: () => void
 }) => {
     const { selectedIds, clear, setEnabled } = useBulkSelection()
-    const { mutateAsync, isPending } = useBulkDeleteLeads()
+    // const { mutateAsync, isPending } = useBulkDeleteLeads()
 
-    const onDelete = async () => {
-        if (!selectedIds.size || isPending) return
+    // const onDelete = async () => {
+    //     if (!selectedIds.size || isPending) return
 
-        await mutateAsync({
-            ids: [...selectedIds],
-        }, { onSuccess: () => {
-            clear()
-            onClose()
-        }, onError: (error) => console.log("LEAD_DELETE_ERROR: ", error) })
-    }
+    //     await mutateAsync({
+    //         ids: [...selectedIds],
+    //     }, { onSuccess: () => {
+    //         clear()
+    //         onClose()
+    //     }, onError: (error) => console.log("LEAD_DELETE_ERROR: ", error) })
+    // }
 
     return (
         <Dialog open={open} onOpenChange={onClose}>
@@ -38,7 +38,7 @@ export const BulkDeleteLeadsDialog = ({ open, onClose }: {
                 </DialogHeader>
 
                 <DialogFooter>
-                    <Button variant="secondary" onClick={onClose} disabled={isPending}>
+                    {/* <Button variant="secondary" onClick={onClose} disabled={isPending}>
                         Cancel
                     </Button>
                     <Button
@@ -50,7 +50,7 @@ export const BulkDeleteLeadsDialog = ({ open, onClose }: {
                         {
                             isPending ? "Deleting Customers..." : "Delete Customers"
                         }
-                    </Button>
+                    </Button> */}
                 </DialogFooter>
             </DialogContent>
         </Dialog>
