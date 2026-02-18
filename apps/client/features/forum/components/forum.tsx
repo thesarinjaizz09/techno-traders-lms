@@ -6,6 +6,7 @@ import {
   Check,
   CheckCheck,
   Globe,
+  GlobeLock,
   Hash,
   Menu,
   MessageSquare,
@@ -33,6 +34,11 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { Textarea } from "@/components/ui/textarea";
 import { useMessages, useMessagesCache } from "../hooks/use-forum";
 import { useSocket } from "@/providers/socket-provider";
@@ -456,12 +462,20 @@ export default function Forum() {
             </div>
 
             <div className="flex items-center gap-1">
+
               <Button variant="ghost" size="icon" aria-label="Pinned notes">
-                {
-                  connected ? <Globe className={`size-4 ${connected ? "text-emerald-500" : "text-red-500"
-                    }`} /> : <Globe className={`size-4 ${connected ? "text-emerald-500" : "text-red-500"
-                      }`} />
-                }
+                <Tooltip>
+
+                  {
+                    connected ? <TooltipTrigger><Globe className={`size-4 ${connected ? "text-emerald-500" : "text-red-500"
+                      }`} /> </TooltipTrigger> : <TooltipTrigger><GlobeLock className={`size-4 ${connected ? "text-emerald-500" : "text-red-500"
+                        }`} /></TooltipTrigger>
+                  }
+
+                  <TooltipContent>
+                    <p>{connected ? "Connected" : "Disconnected"}</p>
+                  </TooltipContent>
+                </Tooltip>
               </Button>
               <Button variant="ghost" size="icon" aria-label="Pinned notes">
                 <Pin className="size-4" />
