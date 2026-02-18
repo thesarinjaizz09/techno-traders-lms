@@ -22,10 +22,10 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
   const [connected, setConnected] = useState(false);
 
   useEffect(() => {
-    // ⛔️ Wait until auth is resolved
+    // Wait until auth is resolved
     if (isLoading) return;
 
-    // ⛔️ No user → ensure socket is disconnected
+    // No user → ensure socket is disconnected
     if (!user) {
       if (socketRef.current) {
         socketRef.current.disconnect();
@@ -36,7 +36,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    // ✅ User exists → ensure socket is connected
+    // User exists → ensure socket is connected
     if (!socketRef.current) {
       const socket = createSocket(); // no token needed
       socketRef.current = socket;

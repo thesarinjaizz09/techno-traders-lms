@@ -18,7 +18,7 @@ const getInfiniteInput = z.object({
 // ────────────────────────────────────────────────
 export const messagesRouter = createTRPCRouter({
   /**
-   * 🔄 Cursor-based infinite list (newest → oldest)
+   * Cursor-based infinite list (newest → oldest)
    * 
    * Production notes:
    * - Logs query metrics for observability
