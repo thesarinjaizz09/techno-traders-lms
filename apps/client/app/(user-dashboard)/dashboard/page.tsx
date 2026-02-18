@@ -126,12 +126,6 @@ export default function DashboardPage() {
                 {today} - Track your setups, refine strategy, and stay disciplined.
               </CardDescription>
             </div>
-            <Button asChild className="w-full sm:w-auto">
-              <Link href="/create">
-                Start Trade Journal
-                <ArrowUpRight className="size-4" />
-              </Link>
-            </Button>
           </CardHeader>
         </Card>
 

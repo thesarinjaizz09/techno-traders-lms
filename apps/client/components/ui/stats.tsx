@@ -1,15 +1,16 @@
-import { LeadStatus, Source, MailStatus, CampaignStatus, CampaignRecipientStatus } from "@/lib/generated/prisma/enums";
+// import { LeadStatus, Source, MailStatus, CampaignStatus, CampaignRecipientStatus } from "@/lib/generated/prisma/enums";
 
-type ThemeKey =
-  | LeadStatus
-  | Source
-  | MailStatus
-  | CampaignStatus
-  | CampaignRecipientStatus
-  | "green"
-  | "blue"
-  | "red"
-  | "purple";
+type ThemeKey = any;
+// type ThemeKey =
+//   | LeadStatus
+//   | Source
+//   | MailStatus
+//   | CampaignStatus
+//   | CampaignRecipientStatus
+//   | "green"
+//   | "blue"
+//   | "red"
+//   | "purple";
 
 export const themeMap: Record<ThemeKey, string> = {
   // Generic

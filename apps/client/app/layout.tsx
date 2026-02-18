@@ -7,6 +7,7 @@ import { NuqsAdapter } from 'nuqs/adapters/next/app'
 import { Provider } from "jotai";
 import "./globals.css";
 import { SocketProvider } from "@/providers/socket-provider";
+import { TooltipProvider } from "@/components/ui/tooltip"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -38,7 +39,7 @@ export default function RootLayout({
           <NuqsAdapter>
             <Provider>
               <SocketProvider>
-                {children}
+                <TooltipProvider>{children}</TooltipProvider>
               </SocketProvider>
               <Toaster richColors />
             </Provider>

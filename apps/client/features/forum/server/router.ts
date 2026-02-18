@@ -89,20 +89,21 @@ export const messagesRouter = createTRPCRouter({
         user: m.user.name ?? "Anonymous", // Fallback for null names
         role: m.userId === userId ? "you" : "member",
         message: m.content.trim(), // Basic sanitization (trim whitespace)
+        createdAt: m.createdAt.toISOString(),
         time: m.createdAt.toLocaleTimeString("en-IN", {
           hour: "2-digit",
           minute: "2-digit",
-          hour12: false, // 24-hour format for consistency
+          hour12: true, // 12-hour format with AM/PM
         }),
       }));
 
       // ─── Logging: End of query (metrics) ───
       const queryDuration = Date.now() - queryStart;
-      queryLogger.info({
-        itemsCount: items.length,
-        nextCursor: !!nextCursor,
-        durationMs: queryDuration,
-      }, "Messages fetched successfully");
+      // queryLogger.info({
+      //   itemsCount: items.length,
+      //   nextCursor: !!nextCursor,
+      //   durationMs: queryDuration,
+      // }, "Messages fetched successfully");
 
       // Optional: If queryDuration > threshold, alert (e.g., via Sentry)
       if (queryDuration > 500) {

@@ -6,7 +6,7 @@ import { FieldLabel } from "@/components/ui/field"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
-import { useBulkUpdateLeads } from "@/features/customers/hooks/use-leads"
+// import { useBulkUpdateLeads } from "@/features/customers/hooks/use-leads"
 
 
 interface Props {
@@ -17,25 +17,25 @@ interface Props {
 export const BulkAssignLeadsDialog = ({ open, onClose }: Props) => {
     // const team = useTeamMembers()
     const { selectedIds, clear } = useBulkSelection()
-    const { mutateAsync, isPending } = useBulkUpdateLeads()
+    // const { mutateAsync, isPending } = useBulkUpdateLeads()
 
     const [assignee, setAssignee] = useState("")
 
     const onAssign = async () => {
-        if (!selectedIds.size || isPending) return
+        // if (!selectedIds.size || isPending) return
 
-        await mutateAsync({
-            ids: [...selectedIds],
-            assignedTo: assignee
-        }, {
-            onSuccess: () => {
-                clear()
-                onClose()
-            },
-            onError: (error) => {
-                console.log("LEAD_UPDATE_ERROR: ", error)
-            },
-        })
+        // await mutateAsync({
+        //     ids: [...selectedIds],
+        //     assignedTo: assignee
+        // }, {
+        //     onSuccess: () => {
+        //         clear()
+        //         onClose()
+        //     },
+        //     onError: (error) => {
+        //         console.log("LEAD_UPDATE_ERROR: ", error)
+        //     },
+        // })
     }
 
     return (
@@ -70,15 +70,15 @@ export const BulkAssignLeadsDialog = ({ open, onClose }: Props) => {
                 </div> */}
 
                 <DialogFooter>
-                    <Button variant="destructive" onClick={onClose} disabled={isPending}>
+                    {/* <Button variant="destructive" onClick={onClose} disabled={isPending}>
                         Cancel
-                    </Button>
-                    <Button onClick={onAssign} disabled={isPending || !assignee}>
+                    </Button> */}
+                    {/* <Button onClick={onAssign} disabled={isPending || !assignee}>
                         {isPending ? <Spinner /> : <Users className="size-3.5" />}
                         {
                             isPending ? "Assigning Leads..." : "Assign Leads"
                         }
-                    </Button>
+                    </Button> */}
                 </DialogFooter>
             </DialogContent>
         </Dialog>
