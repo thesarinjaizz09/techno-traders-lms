@@ -17,7 +17,7 @@ type RouterOutput = inferRouterOutputs<AppRouter>;
 type MessagesInfinite = RouterOutput["messages"]["getInfinite"];
 
 // Common query options – centralize to avoid duplication & bugs
-const MESSAGES_QUERY_LIMIT = 20;
+const MESSAGES_QUERY_LIMIT = 12;
 const MESSAGES_QUERY_KEY = { limit: MESSAGES_QUERY_LIMIT } as const;
 
 // ────────────────────────────────────────────────

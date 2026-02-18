@@ -172,10 +172,11 @@ export async function setupSocket(httpServer: any) {
                     user: message.user.name,
                     role: "member", // client decides "you"
                     message: message.content,
+                    createdAt: message.createdAt.toISOString(),
                     time: message.createdAt.toLocaleTimeString("en-IN", {
                         hour: "2-digit",
                         minute: "2-digit",
-                        hour12: false,
+                        hour12: true,
                     }),
                 };
 
