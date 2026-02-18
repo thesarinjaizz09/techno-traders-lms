@@ -1,7 +1,10 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-import { PrismaClient } from "../client/lib/generated/prisma/client"
+import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient } from "./lib/generated/prisma/client"
+
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
 
 // ────────────────────────────────────────────────
 // Singleton pattern to prevent multiple instances 
@@ -14,6 +17,7 @@ let prisma: PrismaClient;
 
 if (!globalForPrisma.prisma) {
     prisma = new PrismaClient({
+        adapter,
         // Recommended production logging levels
         log: process.env.NODE_ENV === "production"
             ? ["warn", "error"]
