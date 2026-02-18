@@ -141,8 +141,9 @@ export default function Forum() {
   const cache = useMessagesCache();
   const { data: user } = useCurrentUser();
   const { socket, connected } = useSocket();
-  const messagesContainerRef = useRef<HTMLDivElement | null>(null);
   const { data: serverMessages, isLoading } = useMessages()
+  
+  const messagesContainerRef = useRef<HTMLDivElement | null>(null);
 
   const [activeChannel, setActiveChannel] = useState(channels[0]?.id ?? "global-floor");
   const [composer, setComposer] = useState("");
