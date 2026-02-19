@@ -1,7 +1,7 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { prisma } from "../db";
-import { UserRole } from "../generated/prisma/enums";
+// import { UserRole } from "../generated/prisma/enums";
 
 export const auth = betterAuth({
     database: prismaAdapter(prisma, {
@@ -14,7 +14,7 @@ export const auth = betterAuth({
     user: {
         additionalFields: {
             role: {
-                type: ["USER", "ADMIN"] as Array<UserRole>,
+                type: ["USER", "ADMIN"] as Array<"USER" | "ADMIN">,
                 input: false
             },
 

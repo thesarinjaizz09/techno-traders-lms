@@ -4,7 +4,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { getSession } from "@/lib/auth/client";
-import { UserRole } from "@/lib/generated/prisma/enums";
+// import { UserRole } from "@/lib/generated/prisma/enums";
 
 interface UseAuthSessionProps {
     session: any | null;
@@ -25,9 +25,9 @@ export function useAuthSession(): UseAuthSessionProps {
         (async () => {
             try {
                 const result = await getSession();
-                if (result && result.data?.user.role === UserRole.ADMIN) {
-                    router.push(process.env.NEXT_PUBLIC_UNAUTHORIZED_REDIRECT_URL || "/unauth");
-                }
+                // if (result && result.data?.user.role === UserRole.ADMIN) {
+                //     router.push(process.env.NEXT_PUBLIC_UNAUTHORIZED_REDIRECT_URL || "/unauth");
+                // }
                 if (isMounted) {
                     setSession(result ?? null);
                 }

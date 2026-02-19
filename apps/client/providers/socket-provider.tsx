@@ -17,6 +17,7 @@ const SocketContext = createContext<SocketContextValue>({
 
 export function SocketProvider({ children }: { children: React.ReactNode }) {
   const { data: user, isLoading } = useCurrentUser();
+  const GLOBAL_ROOM = "global_room";
 
   const socketRef = useRef<Socket | null>(null);
   const [connected, setConnected] = useState(false);

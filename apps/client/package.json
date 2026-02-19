@@ -4,14 +4,19 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "dev:prisma": "prisma generate && next dev",
-    "build": "prisma generate && next build",
+    "dev:prisma": "prisma generate && npm run postbuild && next dev",
+    "build": "next build",
     "inngest:dev": "inngest-cli dev",
     "start": "next start",
     "dev:all": "concurrently \"npm run dev\" \"npm run inngest:dev\"",
     "dev:mprocs": "mprocs",
     "lint": "eslint",
-    "db:studio": "npx prisma studio"
+    "db:studio": "npx prisma studio",
+    "postinstall": "prisma generate",
+    "postbuild": "cp -r ./lib/generated/prisma/libquery_engine-rhel-openssl-3.0.x.so.node .next/server/ || true && cp -r ./lib/generated/prisma/libquery_engine-rhel-openssl-3.0.x.so.node .next/server/chunks/ || true"
+  },
+  "prisma": {
+    "schema": "./prisma/schema.prisma"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^2.0.45",
@@ -78,6 +83,7 @@
     "zustand": "^5.0.11"
   },
   "devDependencies": {
+    "@prisma/nextjs-monorepo-workaround-plugin": "^7.4.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/nprogress": "^0.2.3",
