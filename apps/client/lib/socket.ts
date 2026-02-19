@@ -7,9 +7,10 @@ export function createSocket() {
   if (socket) return socket;
 
   socket = io(process.env.NEXT_PUBLIC_SOCKET_URL!, {
-    transports: ["websocket"],
+    transports: ["websocket", "polling"],
     withCredentials: true,
-    autoConnect: false, // critical
+    autoConnect: true, // critical
+    reconnection: true,
   });
 
   return socket;
