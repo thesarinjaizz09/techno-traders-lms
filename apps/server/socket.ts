@@ -49,7 +49,7 @@ export async function setupSocket(httpServer: any) {
 
     const io = new Server<any, any, any, SocketData>(httpServer, {
         cors: {
-            origin: process.env.CORS_ORIGIN?.split(",") || ["http://localhost:3000", "*"],
+            origin: process.env.CORS_ORIGIN?.split(",") || ["http://localhost:3000", "*", "https://techno-traders-lms.vercel.app"],
             methods: ["GET", "POST"],
             credentials: true,
         },
