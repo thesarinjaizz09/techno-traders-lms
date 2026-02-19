@@ -88,6 +88,7 @@ export const messagesRouter = createTRPCRouter({
           hour12: true, // 12-hour format with AM/PM
         }),
         type: m.type,
+        userId: m.userId,
       }));
 
       // ─── Logging: End of query (metrics) ───

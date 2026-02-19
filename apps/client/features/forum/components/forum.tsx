@@ -25,6 +25,8 @@ import {
 
 import { openSans } from "@/fonts";
 import EmojiPicker, { EmojiClickData, Theme } from "emoji-picker-react";
+import type { inferRouterOutputs } from "@trpc/server";
+import type { AppRouter } from "@/trpc/routers/_app";
 import { useCurrentUser } from "@/features/users/hooks/use-users";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -47,6 +49,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useMessages, useMessagesCache } from "../hooks/use-forum";
 import { useSocket } from "@/providers/socket-provider";
 import { cn } from "@/lib/utils";
+import { getColorForUser } from "@/constants/chat-colors";
 
 type Channel = {
   id: string;
@@ -55,14 +58,8 @@ type Channel = {
   unread?: number;
 };
 
-type ChatMessage = {
-  id: string;
-  user: string;
-  role: string;
-  message: string;
-  createdAt: string;
-  time: string;
-  type: "SYSTEM" | "USER";
+type RouterOutput = inferRouterOutputs<AppRouter>;
+type ChatMessage = RouterOutput["messages"]["getInfinite"]["items"][number] & {
   reactions?: { emoji: string; count: number }[];
 };
 
@@ -306,6 +303,7 @@ export default function Forum() {
                 createdAt: message.createdAt,
                 time: message.time,
                 type: message.type ?? "USER",
+                userId: message.userId,
               };
             }
 
@@ -338,6 +336,7 @@ export default function Forum() {
                 createdAt: message.createdAt,
                 time: message.time,
                 type: message.type ?? "USER",
+                userId: message.userId,
               },
               ...firstPage.items,
               ],
@@ -356,7 +355,7 @@ export default function Forum() {
       }
     };
 
-    const onMessageSystem = (message: any) => {
+    const onMessageSystem = (message: IncomingSocketMessage) => {
       const el = messagesContainerRef.current;
       const userAtBottom = el ? isNearBottom(el) : true;
       let shouldShowNewMessageIndicator = false;
@@ -366,11 +365,12 @@ export default function Forum() {
       cache.prependMessage({
         id: message.id,
         user: message.user,
-        role: "member",
+        role: "system",
         message: message.message,
         createdAt: message.createdAt,
         time: message.time,
         type: "SYSTEM",
+        userId: message.userId,
       });
 
       if (!userAtBottom) {
@@ -488,6 +488,7 @@ export default function Forum() {
         hour12: true,
       }),
       type: "USER" as const,
+      userId: user?.id ?? "temp-user",
     };
 
     cache.prependMessage(optimistic);
@@ -690,7 +691,7 @@ export default function Forum() {
                   {item.type === "SYSTEM" && (
                     <div key={item.id} className="flex justify-center my-4">
                       <span className="rounded-sm bg-muted px-4 py-2 text-xs text-muted-foreground flex items-center justify-center">
-                        <UserCircle className="size-3.5 inline-block mr-2.5 text-primary" />
+                        <UserCircle className={cn("size-3.5 inline-block mr-2.5", item.user === user?.name ? "text-primary" : `${getColorForUser(item.userId)?.name}`)} />
                         {item.message} at {item.time}
                       </span>
                     </div>
@@ -698,7 +699,7 @@ export default function Forum() {
 
                   {item.type !== "SYSTEM" && <div key={item.id} className={`flex flex-row gap-2.5 justify-start ${mine && "flex-row-reverse"}`}>
                     <Avatar className="mt-0.5 size-8 border rounded-sm">
-                      <AvatarFallback className="text-[11px] rounded-sm">{initials(item.user)}</AvatarFallback>
+                      <AvatarFallback className={cn("text-[11px] rounded-sm", item.user === user?.name ? "text-primary" : `${getColorForUser(item.userId)?.name}`)}>{initials(item.user)}</AvatarFallback>
                     </Avatar>
 
                     <div
@@ -706,7 +707,7 @@ export default function Forum() {
     relative max-w-[85%] space-y-1 rounded-sm border px-3 py-2 sm:max-w-[72%]
     ${mine
                           ? "border-border/80 bg-muted/60"
-                          : "border-border/80 bg-background/50"
+                          : `bg-background/50 border-border/80` // Default to bg-muted if no color found
                         }
   `}
                     >
@@ -716,7 +717,7 @@ export default function Forum() {
       ${mine ? "ml-auto justify-end" : ""}
     `}
                       >
-                        <span className="font-semibold leading-relaxed text-primary">
+                        <span className={cn(item.user === user?.name ? "text-primary" : `${getColorForUser(item.userId)?.name}`, "font-semibold leading-relaxed")}>
                           {item.user === user?.name ? "You" : item.user}
                         </span>
                         <span className="text-muted-foreground">{getMessageTime(item)}</span>
