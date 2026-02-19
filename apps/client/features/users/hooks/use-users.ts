@@ -1,5 +1,6 @@
 import { useTRPC } from "@/trpc/client";
 import {
+  useMutation,
   useQuery,
   useQueryClient,
   type QueryObserverResult,
@@ -67,4 +68,13 @@ export function useCurrentUser(): UseCurrentUserResult {
 
     user: query.data ?? null,
   };
+}
+
+export function useCreateSystemMessage() {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+
+  return useMutation(
+    trpc.users.createSystemMessage.mutationOptions({}),
+  );
 }

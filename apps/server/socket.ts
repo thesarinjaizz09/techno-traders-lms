@@ -7,6 +7,7 @@ import { createAdapter } from "@socket.io/redis-adapter";
 import { redisPub, redisSub } from "./redis";
 import { prisma } from "./prisma";
 import { z } from "zod";
+import { time } from "node:console";
 
 type AuthenticatedUser = {
     id: string;
@@ -133,6 +134,33 @@ export async function setupSocket(httpServer: any) {
                 userId: user.id,
                 name: user.name,
             });
+        });
+
+        socket.on("user:new", (event: any) => {
+            const sys = event.message; // 👈 THIS IS THE FIX
+
+            if (!sys) {
+                console.error("SYSTEM message missing payload");
+                return;
+            }
+
+            const payload = {
+                id: sys.id,
+                type: "SYSTEM",
+                message: sys.content,
+                createdAt: sys.createdAt,
+                user: user?.name || "System",
+                role: "system",
+                time: new Date(sys.createdAt).toLocaleTimeString("en-IN", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    hour12: true,
+                }),
+                userId: sys.userId,
+            };
+
+            // console.log("Broadcasting system message:", payload);
+            io.to(GLOBAL_ROOM).emit("message:system", payload);
         });
 
         // ─── Rate limiting key per user ───

@@ -26,9 +26,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { CreateValues, CreateSchema } from "./validate";
 import { Spinner } from "@/components/ui/spinner";
 import { LayoutDashboard, Mail, Lock, SquareUser, EyeOff, Eye } from "lucide-react"
+import { useSocket } from "@/providers/socket-provider";
+import { useCreateSystemMessage } from "@/features/users/hooks/use-users";
 
 export function CreateForm({ className }: React.ComponentProps<"form">) {
   const router = useRouter()
+  const { socket, connected } = useSocket();
+  const { mutateAsync: createSystemMessage } = useCreateSystemMessage()
   const [showPassword, setShowPassword] = useState(false);
   const [isPending, startTransition] = useTransition()
 
@@ -50,7 +54,15 @@ export function CreateForm({ className }: React.ComponentProps<"form">) {
           password: data.password,
           callbackURL: process.env.NEXT_PUBLIC_AUTH_SUCCESS_REDIRECT_URL || "/dashboard",
         }, {
-          onSuccess: () => {
+          onSuccess: async () => {
+            await createSystemMessage(undefined, {
+              onSuccess: (message) => {
+                if (socket && connected) {
+                  socket.emit("user:new", { message });
+                }
+              },
+            });
+
             router.push(process.env.NEXT_PUBLIC_AUTH_SUCCESS_REDIRECT_URL || "/dashboard");
             toast.success("Credentials created successfully");
           },

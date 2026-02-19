@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Bell,
+  CalendarDays,
   Check,
   CheckCheck,
   Globe,
@@ -17,6 +18,8 @@ import {
   SendHorizontal,
   Settings2,
   Smile,
+  User,
+  UserCircle,
   Users,
 } from "lucide-react";
 
@@ -59,6 +62,7 @@ type ChatMessage = {
   message: string;
   createdAt: string;
   time: string;
+  type: "SYSTEM" | "USER";
   reactions?: { emoji: string; count: number }[];
 };
 
@@ -71,6 +75,7 @@ type IncomingSocketMessage = {
   message: string;
   createdAt: string;
   time: string;
+  type?: "SYSTEM" | "USER";
 };
 
 const SKELETON_COUNT = 5; // 5-7 skeleton items for loading state
@@ -197,7 +202,7 @@ export default function Forum() {
   const messages = useMemo(() => {
     if (!serverMessages?.pages) return [];
     const flat = serverMessages.pages.flatMap((page) => page.items);
-    console.log("Flat messages count:", flat.length, "pages:", serverMessages.pages.length);
+    // console.log("Flat messages count:", flat.length, "pages:", serverMessages.pages.length);
     return flat;
   }, [serverMessages]);
 
@@ -300,6 +305,7 @@ export default function Forum() {
                 message: message.message,
                 createdAt: message.createdAt,
                 time: message.time,
+                type: message.type ?? "USER",
               };
             }
 
@@ -331,6 +337,7 @@ export default function Forum() {
                 message: message.message,
                 createdAt: message.createdAt,
                 time: message.time,
+                type: message.type ?? "USER",
               },
               ...firstPage.items,
               ],
@@ -349,11 +356,38 @@ export default function Forum() {
       }
     };
 
+    const onMessageSystem = (message: any) => {
+      const el = messagesContainerRef.current;
+      const userAtBottom = el ? isNearBottom(el) : true;
+      let shouldShowNewMessageIndicator = false;
+
+      // console.log("System message received:", message);
+
+      cache.prependMessage({
+        id: message.id,
+        user: message.user,
+        role: "member",
+        message: message.message,
+        createdAt: message.createdAt,
+        time: message.time,
+        type: "SYSTEM",
+      });
+
+      if (!userAtBottom) {
+        shouldShowNewMessageIndicator = true;
+      }
+
+      if (shouldShowNewMessageIndicator) {
+        setUnseenNewMessages((count) => count + 1);
+      }
+    };
 
     socket.on("message:new", onMessageNew);
+    socket.on("message:system", onMessageSystem);
 
     return () => {
       socket.off("message:new", onMessageNew);
+      socket.off("message:system", onMessageSystem);
     };
   }, [socket, cache]);
 
@@ -438,6 +472,7 @@ export default function Forum() {
         minute: "2-digit",
         hour12: true,
       }),
+      type: "USER" as const,
     };
 
     cache.prependMessage(optimistic);
@@ -630,13 +665,23 @@ export default function Forum() {
                 <div key={`item-${item.id}-${Math.random()}`} className="space-y-1">
                   {showTime && (
                     <div className="flex justify-center my-4">
-                      <Badge variant="secondary" className="rounded-sm px-3 py-1.5">
+                      <Badge variant="secondary" className="rounded-sm px-3 py-1.5 text-muted-foreground text-xs">
+                        <CalendarDays className="size-3.5 inline-block mr-1.5 text-primary" />
                         {getTimestampBadgeLabel(item)}
                       </Badge>
                     </div>
                   )}
 
-                  <div key={item.id} className={`flex flex-row gap-2.5 justify-start ${mine && "flex-row-reverse"}`}>
+                  {item.type === "SYSTEM" && (
+                    <div key={item.id} className="flex justify-center my-4">
+                      <span className="rounded-sm bg-muted px-4 py-2 text-xs text-muted-foreground flex items-center justify-center">
+                        <UserCircle className="size-3.5 inline-block mr-2.5 text-primary" />
+                        {item.message} at {item.time}
+                      </span>
+                    </div>
+                  )}
+
+                  {item.type !== "SYSTEM" && <div key={item.id} className={`flex flex-row gap-2.5 justify-start ${mine && "flex-row-reverse"}`}>
                     <Avatar className="mt-0.5 size-8 border rounded-sm">
                       <AvatarFallback className="text-[11px] rounded-sm">{initials(item.user)}</AvatarFallback>
                     </Avatar>
@@ -682,7 +727,7 @@ export default function Forum() {
                         </div>
                       )}
                     </div>
-                  </div>
+                  </div>}
                 </div>
               );
             })}
