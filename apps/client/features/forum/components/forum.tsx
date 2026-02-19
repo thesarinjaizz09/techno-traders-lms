@@ -172,10 +172,15 @@ export default function Forum() {
   const { socket, connected } = useSocket();
   const { data: serverMessages, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useMessages()
 
+  const [typingUsers, setTypingUsers] = useState<Record<string, string>>({});
+
   const shouldAutoScroll = useRef(true);
   const prevScrollHeightRef = useRef<number>(0);
   const hasAutoScrolledInitially = useRef(false);
   const messagesContainerRef = useRef<HTMLDivElement | null>(null);
+
+  const isTypingRef = useRef(false);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const [composer, setComposer] = useState("");
   const [activeChannel, setActiveChannel] = useState(channels[0]?.id ?? "global-floor");
@@ -183,6 +188,10 @@ export default function Forum() {
 
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+
+  useEffect(() => {
+    console.log("Typing users updated:", { typingUsers });
+  }, [typingUsers]);
 
   const messages = useMemo(() => {
     if (!serverMessages?.pages) return [];
@@ -359,6 +368,45 @@ export default function Forum() {
     setUnseenNewMessages(0);
   }, [messages]);
 
+  useEffect(() => {
+    if (!socket) return;
+
+    const onTypingStart = ({ userId, name }: any) => {
+      setTypingUsers((prev) => ({
+        ...prev,
+        [userId]: name,
+      }));
+    };
+
+    const onTypingStop = ({ userId }: any) => {
+      setTypingUsers((prev) => {
+        const copy = { ...prev };
+        delete copy[userId];
+        return copy;
+      });
+    };
+
+    socket.on("typing:start", onTypingStart);
+    socket.on("typing:stop", onTypingStop);
+
+    return () => {
+      socket.off("typing:start", onTypingStart);
+      socket.off("typing:stop", onTypingStop);
+    };
+  }, [socket]);
+
+  useEffect(() => {
+    const el = messagesContainerRef.current;
+    if (!el) return;
+
+    const typingCount = Object.keys(typingUsers).length;
+
+    if (typingCount > 0 && shouldAutoScroll.current) {
+      // Auto-scroll to show typing indicator if already near bottom
+      scrollToBottom("smooth");
+    }
+  }, [typingUsers]);
+
   const channel = useMemo(
     () => channels.find((entry) => entry.id === activeChannel) ?? channels[0],
     [activeChannel]
@@ -368,6 +416,11 @@ export default function Forum() {
 
   const sendMessage = () => {
     if (!composer.trim() || !connected || !socket) return;
+
+    if (isTypingRef.current) {
+      socket.emit("typing:stop");
+      isTypingRef.current = false;
+    }
 
     setShowEmojiPicker(false);
 
@@ -490,7 +543,6 @@ export default function Forum() {
     });
   };
 
-
   return (
     <div className={`${openSans.className} relative h-full p-1 sm:p-4 md:px-1.5 md:py-2`}>
       <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,oklch(0.72_0.17_293/.12),transparent_42%),radial-gradient(circle_at_bottom_right,oklch(0.71_0.2_160/.08),transparent_40%)]" />
@@ -524,15 +576,9 @@ export default function Forum() {
                   </TooltipContent>
                 </Tooltip>
               </Button>
-              {/* <Button variant="ghost" size="icon" aria-label="Pinned notes">
-                <Pin className="size-4" />
-              </Button> */}
               <Button variant="ghost" size="icon" aria-label="Notifications">
                 <Bell className="size-4" />
               </Button>
-              {/* <Button variant="ghost" size="icon" aria-label="Settings">
-                <Settings2 className="size-4" />
-              </Button> */}
 
               <Sheet>
                 <SheetTrigger asChild>
@@ -580,7 +626,7 @@ export default function Forum() {
               const showTime = shouldShowTimestamp(prev, item);
 
               return (
-                <div key={item.id}>
+                <div key={`item-${item.id}-${Math.random()}`} className="space-y-1">
                   {showTime && (
                     <div className="flex justify-center my-4">
                       <Badge variant="secondary" className="rounded-sm px-3 py-1.5">
@@ -639,6 +685,55 @@ export default function Forum() {
                 </div>
               );
             })}
+
+            {!isLoading && Object.keys(typingUsers).length > 0 && (
+              <div className="mt-5 pb-2 flex items-start gap-4 animate-fade-in">
+                {/* Avatar(s) of typing user(s) – show up to 3, overlap if more */}
+                <div className="relative flex -space-x-1.5">
+                  {Object.keys(typingUsers)
+                    .slice(0, 1)
+                    .map((userId) => {
+                      const userName = typingUsers[userId]; // or fetch full user if you have it
+                      return (
+                        <Avatar key={userId} className="size-8 rounded-sm border-2 border-background">
+                          <AvatarFallback className="text-[11px] bg-primary/20 text-primary">
+                            {initials(userName || "User")}
+                          </AvatarFallback>
+                        </Avatar>
+                      );
+                    })}
+                  {Object.keys(typingUsers).length > 1 && (
+                    <div className="absolute -top-3.5 -right-4.5 size-5 rounded-full bg-muted flex items-center justify-center text-[10px] font-medium border-2 border-background ml-1">
+                      {Object.keys(typingUsers).length - 1 > 9 ? "9+" : `+${Object.keys(typingUsers).length - 1}`}
+                    </div>
+                  )}
+                </div>
+
+                {/* Typing bubble skeleton */}
+                <div
+                  className={`
+        min-w-38 relative max-w-[70%] rounded-sm px-3 py-2
+        bg-muted/60 border border-border/50
+        shadow-sm
+      `}
+                >
+                  {/* Animated bouncing dots */}
+                  <div className="flex items-center gap-1 h-5">
+                    <div className="typing-dot w-1.5 h-1.5 rounded-full bg-muted-foreground/70 animate-bounce [animation-delay:0ms]"></div>
+                    <div className="typing-dot w-1.5 h-1.5 rounded-full bg-muted-foreground/70 animate-bounce [animation-delay:150ms]"></div>
+                    <div className="typing-dot w-1.5 h-1.5 rounded-full bg-muted-foreground/70 animate-bounce [animation-delay:300ms]"></div>
+                  </div>
+
+                  {/* Subtle user names if multiple */}
+                  {Object.keys(typingUsers).length >= 1 && (
+                    <div className="w-fit absolute -bottom-5 left-0.5 text-[10px] text-muted-foreground/80">
+                      {Object.values(typingUsers).slice(0, 2).join(", ")}
+                      {Object.keys(typingUsers).length > 2 && ` + ${Object.keys(typingUsers).length - 2}..`}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           {unseenNewMessages > 0 && (
@@ -673,9 +768,6 @@ export default function Forum() {
           <div className="border-t bg-background/65 p-2 sm:p-3">
             <div className="flex items-center justify-between rounded-sm border bg-card/80 p-2 gap-2">
               <div className="flex items-center bg-muted-foreground/10 rounded-sm py-0.5">
-                {/* <Button variant="ghost" size="icon-sm" aria-label="Attach file">
-                  <Paperclip className="size-4" />
-                </Button> */}
                 <div className="relative">
                   <Button
                     variant="ghost"
@@ -699,19 +791,45 @@ export default function Forum() {
                     </div>
                   )}
                 </div>
-                {/* <Button variant="ghost" size="icon-sm" aria-label="Voice input">
-                  <Mic className="size-4" />
-                </Button> */}
               </div>
 
               <Textarea
                 ref={textareaRef}
                 value={composer}
-                onChange={(event) => setComposer(event.target.value)}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setComposer(value);
+
+                  if (!socket || !connected) return;
+
+                  if (!isTypingRef.current) {
+                    if (!value.trim()) return;
+
+                    isTypingRef.current = true;
+                    socket.emit("typing:start");
+                  }
+
+                  if (typingTimeoutRef.current) {
+                    clearTimeout(typingTimeoutRef.current);
+                  }
+
+                  typingTimeoutRef.current = setTimeout(() => {
+                    isTypingRef.current = false;
+                    socket.emit("typing:stop");
+                  }, 2000);
+                }}
                 onKeyDown={(event) => {
                   if (event.key === "Enter" && !event.shiftKey) {
                     event.preventDefault();
                     sendMessage();
+                  }
+                }}
+                onBlur={() => {
+                  if (isTypingRef.current) {
+                    if (!socket || connected) return;
+
+                    // socket.emit("typing:stop");
+                    // isTypingRef.current = false;
                   }
                 }}
                 placeholder={`Message #${channel?.name}`}

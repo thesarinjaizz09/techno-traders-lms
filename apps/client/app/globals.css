@@ -256,3 +256,40 @@ html.dark .react-flow__minimap {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   z-index: 10;
 }
+
+/* In globals.css or component <style> tag */
+@keyframes bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-22px);
+  }
+}
+
+.animate-bounce {
+  animation: bounce 0.8s infinite ease-in-out;
+}
+
+.typing-dot {
+  animation-duration: 0.8s;
+}
+
+/* Optional: fade-in for the whole indicator */
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

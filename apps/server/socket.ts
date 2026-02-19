@@ -119,6 +119,22 @@ export async function setupSocket(httpServer: any) {
         // Optional: broadcast user joined event
         // io.to(GLOBAL_ROOM).emit("user:joined", { id: userId, username: user.username });
 
+        socket.on("typing:start", () => {
+            console.log(`User typing:start → ${userId}`);
+            socket.broadcast.to(GLOBAL_ROOM).emit("typing:start", {
+                userId: user.id,
+                name: user.name,
+            });
+        });
+
+        socket.on("typing:stop", () => {
+            console.log(`User typing:stop → ${userId}`);
+            socket.broadcast.to(GLOBAL_ROOM).emit("typing:stop", {
+                userId: user.id,
+                name: user.name,
+            });
+        });
+
         // ─── Rate limiting key per user ───
         const rateKey = `chat:rate:${userId}`;
 
