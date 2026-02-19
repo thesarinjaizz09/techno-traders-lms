@@ -65,7 +65,7 @@ export async function setupSocket(httpServer: any) {
     // ────────────────────────────────────────────────
     io.use(async (socket, next) => {
         try {
-            const rawCookie = socket.handshake.headers.cookie;
+            const rawCookie = socket.handshake.auth?.token || socket.handshake.headers.cookie || "";
             console.log("Socket cookie:", rawCookie);
 
             if (!rawCookie) {

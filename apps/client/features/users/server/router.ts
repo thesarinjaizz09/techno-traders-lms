@@ -39,8 +39,16 @@ export const usersRouter = createTRPCRouter({
     try {
       const user = await prisma.user.findUnique({
         where: { id: userId },
-        select: CURRENT_USER_SELECT,
+        select: {
+          ...CURRENT_USER_SELECT,
+          sessions: {
+            select: {
+              token: true,
+            },
+          },
+        },
       });
+
 
       if (!user) {
         log.warn("Current user not found in database (possible deletion)");
