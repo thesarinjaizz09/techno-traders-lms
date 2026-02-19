@@ -59,8 +59,8 @@ export function useMessages() {
             staleTime: 30_000,           // 30 seconds – messages rarely change retroactively
             gcTime: 5 * 60_000,          // 5 minutes – keep in cache longer than stale
             refetchOnWindowFocus: false, // don't spam server when user tabs back
-            refetchOnReconnect: false,   // same
-            refetchOnMount: false,       // avoid unnecessary fetches on remount
+            refetchOnReconnect: "always",   // same
+            refetchOnMount: "always",       // avoid unnecessary fetches on remount
 
             // Optional: placeholder data for better UX (last known page if available)
             placeholderData: (previousData: InfiniteData<MessagesInfinite, number | null> | undefined) => previousData,

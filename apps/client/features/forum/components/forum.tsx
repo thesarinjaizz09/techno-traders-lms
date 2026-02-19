@@ -442,6 +442,21 @@ export default function Forum() {
     }
   }, [typingUsers]);
 
+  useEffect(() => {
+    if (!socket) return;
+
+    const onReconnect = () => {
+      cache.invalidate(); // force server reconciliation
+    };
+
+    socket.on("connect", onReconnect);
+
+    return () => {
+      socket.off("connect", onReconnect);
+    };
+  }, [socket]);
+
+
   const channel = useMemo(
     () => channels.find((entry) => entry.id === activeChannel) ?? channels[0],
     [activeChannel]
