@@ -1,11 +1,16 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "strict": true,
+    "module": "CommonJS",          // ← Critical: outputs CJS so exports works
+    "moduleResolution": "node",
     "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
     "skipLibCheck": true,
-    "outDir": "dist"
-  }
+    "outDir": "./dist",
+    "rootDir": "./",            // adjust if your entry is server.ts in src/
+    "sourceMap": true
+  },
+  "include": ["src/**/*.ts", "server.ts"],  // or ["**/*.ts"]
+  "exclude": ["node_modules", "dist"]
 }

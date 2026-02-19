@@ -38,7 +38,9 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
 
     // User exists → ensure socket is connected
     if (!socketRef.current) {
-      const socket = createSocket(); // no token needed
+      const socket = createSocket({
+        token: user.sessions?.[0]?.token, // pass token for auth
+      });
       socketRef.current = socket;
 
       socket.connect();

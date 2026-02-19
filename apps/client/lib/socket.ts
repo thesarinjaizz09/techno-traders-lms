@@ -3,13 +3,15 @@ import { io, Socket } from "socket.io-client";
 
 let socket: Socket | null = null;
 
-export function createSocket() {
+export function createSocket({token}: {token?: string}) {
   if (socket) return socket;
 
   socket = io(process.env.NEXT_PUBLIC_SOCKET_URL!, {
-    transports: ["websocket"],
+    auth: { token },
+    transports: ["websocket", "polling"],
     withCredentials: true,
-    autoConnect: false, // critical
+    autoConnect: true, // critical
+    reconnection: true,
   });
 
   return socket;
