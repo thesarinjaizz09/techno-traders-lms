@@ -1,6 +1,7 @@
 generator client {
-  provider = "prisma-client"
+  provider      = "prisma-client-js"
   output   = "../lib/generated/prisma"
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
 }
 
 datasource db {
@@ -27,8 +28,8 @@ model User {
   sessions      Session[]
   accounts      Account[]
 
-  messages         Message[]
-  messageReads     MessageRead[]
+  messages     Message[]
+  messageReads MessageRead[]
 
   @@unique([email])
   @@map("user")
