@@ -6,30 +6,22 @@ import z from "zod";
 import { TRPCError } from "@trpc/server";
 
 // ────────────────────────────────────────────────
-// Enhanced input schema with stricter defaults & comments
+// Enhanced input schema: Switch to offset for reliability
 // ────────────────────────────────────────────────
 const getInfiniteInput = z.object({
   limit: z.number().min(1).max(100).default(20), // Increased max to 100 for flexibility, but cap for perf
-  cursor: z.uuid().nullable().optional(), // Enforce UUID format for cursor (assuming id is UUID)
+  cursor: z.number().nullish(), // Cursor for tRPC infinite queries
 });
 
 // ────────────────────────────────────────────────
 // Production-grade router
 // ────────────────────────────────────────────────
 export const messagesRouter = createTRPCRouter({
-  /**
-   * Cursor-based infinite list (newest → oldest)
-   * 
-   * Production notes:
-   * - Logs query metrics for observability
-   * - Handles edge cases (e.g., invalid cursor → TRPCError)
-   * - Maps response with sanitized fields (no raw timestamps)
-   * - Optional: Add caching layer (e.g., React Query on client, Redis on server) later
-   */
   getInfinite: protectedProcedure
     .input(getInfiniteInput)
     .query(async ({ ctx, input }) => {
-      const { limit, cursor } = input;
+      const { limit } = input;
+      const offset = input.cursor ?? 0;
       const userId = ctx.session.user.id;
 
       // ─── Logging: Start of query ───
@@ -38,19 +30,16 @@ export const messagesRouter = createTRPCRouter({
         userId,
         operation: "getInfiniteMessages",
         limit,
-        cursor: cursor || "initial",
+        offset, // ← Log offset instead of cursor
       });
       queryLogger.debug("Fetching messages");
 
       let messages;
       try {
         messages = await prisma.message.findMany({
-          take: limit + 1, // +1 for next cursor detection
-          ...(cursor && {
-            cursor: { id: cursor },
-            skip: 1,
-          }),
-          orderBy: { createdAt: "desc" },
+          take: limit + 1, // +1 for next offset detection
+          skip: offset, // ← Use skip for offset-based pagination
+          orderBy: { createdAt: "desc" }, // Keep desc (newest first)
           include: {
             user: {
               select: {
@@ -61,6 +50,7 @@ export const messagesRouter = createTRPCRouter({
             },
           },
         });
+        // queryLogger.debug({ totalInDB: await prisma.message.count(), fetched: messages.length });
       } catch (err) {
         queryLogger.error({ err }, "Database query failed");
         throw new TRPCError({
@@ -69,18 +59,20 @@ export const messagesRouter = createTRPCRouter({
         });
       }
 
-      // ─── Validate cursor if provided (edge case: invalid UUID already caught by Zod) ───
-      if (cursor && messages.length === 0) {
-        queryLogger.warn({ cursor }, "Cursor returned no results – possible invalid or exhausted");
+      // ─── Validate offset if provided (edge case: offset too high → empty) ───
+      if (offset > 0 && messages.length === 0) {
+        queryLogger.warn({ offset }, "Offset returned no results – possible exhausted or invalid");
         // Don't throw; just return empty list (graceful degradation)
       }
 
-      // ─── Pagination logic ───
-      let nextCursor: string | null = null;
+      // ─── Pagination logic (offset-based) ───
+      let nextCursor: number | null = null; // ← Type as number (offset)
       if (messages.length > limit) {
-        const nextItem = messages.pop()!;
-        nextCursor = nextItem.id;
-        queryLogger.debug({ nextCursor }, "Next cursor computed");
+        messages.pop(); // Remove the extra for items
+        nextCursor = offset + limit; // Simple arithmetic for next offset
+        queryLogger.debug({ nextCursor }, "Next offset computed");
+      } else {
+        nextCursor = null; // No more messages
       }
 
       // ─── Transform response (sanitize & format) ───
@@ -99,11 +91,11 @@ export const messagesRouter = createTRPCRouter({
 
       // ─── Logging: End of query (metrics) ───
       const queryDuration = Date.now() - queryStart;
-      // queryLogger.info({
-      //   itemsCount: items.length,
-      //   nextCursor: !!nextCursor,
-      //   durationMs: queryDuration,
-      // }, "Messages fetched successfully");
+      queryLogger.info({
+        itemsCount: items.length,
+        nextCursor: !!nextCursor,
+        durationMs: queryDuration,
+      }, "Messages fetched successfully");
 
       // Optional: If queryDuration > threshold, alert (e.g., via Sentry)
       if (queryDuration > 500) {
@@ -112,7 +104,7 @@ export const messagesRouter = createTRPCRouter({
 
       return {
         items,
-        nextCursor,
+        nextCursor
       };
     }),
 });

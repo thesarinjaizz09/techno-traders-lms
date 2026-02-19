@@ -171,6 +171,7 @@ export default function Forum() {
   const { data: serverMessages, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useMessages()
 
   const shouldAutoScroll = useRef(true);
+  const prevScrollHeightRef = useRef<number>(0);
   const hasAutoScrolledInitially = useRef(false);
   const messagesContainerRef = useRef<HTMLDivElement | null>(null);
 
@@ -180,11 +181,16 @@ export default function Forum() {
 
   const messages = useMemo(() => {
     if (!serverMessages?.pages) return [];
-    return serverMessages.pages.flatMap((page) => page.items);
+    const flat = serverMessages.pages.flatMap((page) => page.items);
+    console.log("Flat messages count:", flat.length, "pages:", serverMessages.pages.length);
+    return flat;
   }, [serverMessages]);
+
   const orderedMessages = useMemo(() => [...messages].reverse(), [messages]);
+
   const isNearBottom = (el: HTMLDivElement, threshold = 120) =>
     el.scrollHeight - el.scrollTop - el.clientHeight <= threshold;
+
   const scrollToBottom = (behavior: ScrollBehavior = "smooth") => {
     const el = messagesContainerRef.current;
     if (!el) return;
@@ -227,23 +233,33 @@ export default function Forum() {
       top: container.scrollHeight,
       behavior: "auto",
     });
+
+    // Initialize the ref here (after first meaningful scroll)
+    prevScrollHeightRef.current = container.scrollHeight;
+
     hasAutoScrolledInitially.current = true;
     shouldAutoScroll.current = true;
   }, [isLoading, messages.length]);
 
   useEffect(() => {
-    if (!messagesContainerRef.current) return;
-
     const el = messagesContainerRef.current;
-    const prevHeight = el.scrollHeight;
+    if (!el) return;
 
-    if (isFetchingNextPage) return;
+    if (isFetchingNextPage) return; // skip while still loading
 
     requestAnimationFrame(() => {
       const newHeight = el.scrollHeight;
-      el.scrollTop += newHeight - prevHeight;
+      const heightDiff = newHeight - prevScrollHeightRef.current;
+
+      if (heightDiff > 0) {
+        // Older messages added → preserve position by shifting scroll down
+        el.scrollTop += heightDiff;
+      }
+
+      // Always update ref for next time
+      prevScrollHeightRef.current = newHeight;
     });
-  }, [serverMessages?.pages.length]);
+  }, [serverMessages?.pages?.length, isFetchingNextPage]);
 
   useEffect(() => {
     if (!socket) return;
@@ -259,7 +275,7 @@ export default function Forum() {
         let didReplace = false;
 
         const pages = old.pages.map((page) => {
-          const items = page.items.map((m) => {
+          const items = page.items.map((m: ChatMessage) => {
             if (message.clientMessageId && m.id === message.clientMessageId) {
               didReplace = true;
               return {
@@ -283,7 +299,7 @@ export default function Forum() {
 
           // Dedup guard (important for reconnects)
           const alreadyExists = firstPage.items.some(
-            (m) => m.id === message.id
+            (m: ChatMessage) => m.id === message.id
           );
 
           if (!alreadyExists) {
@@ -443,7 +459,7 @@ export default function Forum() {
     if (!isSameDay(prevDate, currDate)) return true;
 
     const diffMs = Math.abs(currDate.getTime() - prevDate.getTime());
-    return diffMs > 5 * 60 * 1000;
+    return diffMs > 5 * 60 * 60 * 1000;
   }
 
   return (
@@ -477,15 +493,15 @@ export default function Forum() {
                   </TooltipContent>
                 </Tooltip>
               </Button>
-              <Button variant="ghost" size="icon" aria-label="Pinned notes">
+              {/* <Button variant="ghost" size="icon" aria-label="Pinned notes">
                 <Pin className="size-4" />
-              </Button>
+              </Button> */}
               <Button variant="ghost" size="icon" aria-label="Notifications">
                 <Bell className="size-4" />
               </Button>
-              <Button variant="ghost" size="icon" aria-label="Settings">
+              {/* <Button variant="ghost" size="icon" aria-label="Settings">
                 <Settings2 className="size-4" />
-              </Button>
+              </Button> */}
 
               <Sheet>
                 <SheetTrigger asChild>

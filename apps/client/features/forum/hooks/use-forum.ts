@@ -28,7 +28,7 @@ export function useMessagesSuspense() {
 
     return useSuspenseInfiniteQuery({
         ...trpc.messages.getInfinite.infiniteQueryOptions(MESSAGES_QUERY_KEY, {
-            getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+            getNextPageParam: (lastPage: MessagesInfinite) => lastPage.nextCursor ?? undefined,
             staleTime: 30_000,
             gcTime: 5 * 60_000,
             refetchOnWindowFocus: false,
@@ -47,7 +47,13 @@ export function useMessages() {
     return useInfiniteQuery({
         ...trpc.messages.getInfinite.infiniteQueryOptions(MESSAGES_QUERY_KEY, {
             // Cursor-based pagination
-            getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+            getNextPageParam: (lastPage: MessagesInfinite) => {
+                // Offset-based: continue if nextCursor exists and is a valid number
+                if (lastPage.nextCursor !== null && typeof lastPage.nextCursor === 'number' && lastPage.nextCursor > 0) {
+                    return lastPage.nextCursor;
+                }
+                return undefined;
+            },
 
             // Chat-friendly defaults
             staleTime: 30_000,           // 30 seconds – messages rarely change retroactively
@@ -57,7 +63,7 @@ export function useMessages() {
             refetchOnMount: false,       // avoid unnecessary fetches on remount
 
             // Optional: placeholder data for better UX (last known page if available)
-            placeholderData: (previousData) => previousData,
+            placeholderData: (previousData: InfiniteData<MessagesInfinite, number | null> | undefined) => previousData,
 
             // Optional: keepPreviousData if switching filters/views later
             //   keepPreviousData: true,
@@ -80,7 +86,7 @@ export function useMessagesCache() {
          * @param message - Should match the shape returned by getInfinite.items
          */
         prependMessage: (message: MessagesInfinite["items"][number]) => {
-            queryClient.setQueryData<InfiniteData<MessagesInfinite, string | null>>(
+            queryClient.setQueryData<InfiniteData<MessagesInfinite, number | null>>(
                 queryKey,
                 (oldData) => {
                     if (!oldData?.pages?.length) return oldData;
@@ -106,7 +112,7 @@ export function useMessagesCache() {
          * Rollback in case optimistic update fails (e.g. send failed)
          */
         rollbackPrepend: (messageId: string) => {
-            queryClient.setQueryData<InfiniteData<MessagesInfinite, string | null>>(
+            queryClient.setQueryData<InfiniteData<MessagesInfinite, number | null>>(
                 queryKey,
                 (oldData) => {
                     if (!oldData?.pages?.length) return oldData;
@@ -136,27 +142,31 @@ export function useMessagesCache() {
          */
         setData: (
             data: Updater<
-                InfiniteData<MessagesInfinite, string | null> | undefined,
-                InfiniteData<MessagesInfinite, string | null> | undefined
+                InfiniteData<MessagesInfinite, number | null> | undefined,
+                InfiniteData<MessagesInfinite, number | null> | undefined
             >
         ) => {
             queryClient.setQueryData(queryKey, data);
         },
 
         replaceOptimistic: (tempId: string, realMessage: MessagesInfinite["items"][number]) => {
-            queryClient.setQueryData(queryKey, (old: any) => {
-                if (!old) return old;
+            queryClient.setQueryData<InfiniteData<MessagesInfinite, number | null>>(
+                queryKey,
+                (oldData) => {
+                    if (!oldData) return oldData;
 
-                return {
-                    ...old,
-                    pages: old.pages.map((page: any) => ({
-                        ...page,
-                        items: page.items.map((m: any) =>
-                            m.id === tempId ? realMessage : m
-                        ),
-                    })),
-                };
-            });
+                    return {
+                        ...oldData,
+                        pages: oldData.pages.map((page) => ({
+                            ...page,
+                            items: page.items.map((m) =>
+                                m.id === tempId ? realMessage : m
+                            ),
+                        })),
+                    };
+                }
+            );
         }
     };
 }
+
