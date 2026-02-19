@@ -49,7 +49,7 @@ export async function setupSocket(httpServer: any) {
 
     const io = new Server<any, any, any, SocketData>(httpServer, {
         cors: {
-            origin: process.env.CORS_ORIGIN?.split(",") || "http://localhost:3000",
+            origin: process.env.CORS_ORIGIN?.split(",") || ["http://localhost:3000", "*"],
             methods: ["GET", "POST"],
             credentials: true,
         },
@@ -66,7 +66,6 @@ export async function setupSocket(httpServer: any) {
     io.use(async (socket, next) => {
         try {
             const rawCookie = socket.handshake.auth?.token || socket.handshake.headers.cookie || "";
-            console.log("Socket cookie:", rawCookie);
 
             if (!rawCookie) {
                 return next(new Error("No cookies"));
