@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  ArrowDown,
   Bell,
   CalendarDays,
   Check,
@@ -864,7 +865,7 @@ export default function Forum() {
               className="absolute bottom-23 right-7.5 z-20 size-8.5 rounded-full shadow-md bg-primary/40 text-white hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-primary/50 animate-fade-in"
               aria-label="Jump to latest messages"
             >
-              <MessageSquare className="size-3.5" />
+              <ArrowDown className="size-4" />
               <span
                 className={`
         absolute -top-1.5 -right-1.5 
@@ -872,7 +873,7 @@ export default function Forum() {
         flex items-center justify-center 
         rounded-full px-1 text-[9px] font-bold leading-none
         shadow-sm
-        bg-red-500 text-white          /* ← change this color to match your theme */
+        bg-primary/80 text-white          /* ← change this color to match your theme */
         ring-2 ring-background/80      /* optional: helps on dark/light backgrounds */
       `}
               >
