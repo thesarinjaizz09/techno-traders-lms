@@ -598,7 +598,6 @@ export default function Forum() {
 
   // Check if any real user message exists
   const hasUserMessages = orderedMessages.some((msg) => msg.type !== "SYSTEM");
-  console.log("Total messages:", messages.length, "System messages:", systemMessages.length, "Has user messages?", hasUserMessages);
 
   return (
     <div className={`${openSans.className} relative h-full p-1 sm:p-4 md:px-1.5 md:py-2`}>
