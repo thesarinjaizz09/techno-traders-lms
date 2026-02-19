@@ -4,24 +4,16 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "dev:prisma": "prisma generate && npm run postbuild && next dev",
-    "build": "next build",
-    "inngest:dev": "inngest-cli dev",
+    "dev:prisma": "prisma generate && next dev",
+    "build": "prisma generate && next build",
     "start": "next start",
-    "dev:all": "concurrently \"npm run dev\" \"npm run inngest:dev\"",
-    "dev:mprocs": "mprocs",
     "lint": "eslint",
-    "db:studio": "npx prisma studio",
-    "postinstall": "prisma generate",
-    "postbuild": "cp -r ./lib/generated/prisma/libquery_engine-rhel-openssl-3.0.x.so.node .next/server/ || true && cp -r ./lib/generated/prisma/libquery_engine-rhel-openssl-3.0.x.so.node .next/server/chunks/ || true"
+    "db:studio": "npx prisma studio"
   },
   "prisma": {
     "schema": "./prisma/schema.prisma"
   },
   "dependencies": {
-    "@ai-sdk/anthropic": "^3.0.45",
-    "@ai-sdk/google": "^3.0.29",
-    "@ai-sdk/openai": "^3.0.30",
     "@base-ui/react": "^1.2.0",
     "@hookform/resolvers": "^5.2.2",
     "@paralleldrive/cuid2": "^3.3.0",
@@ -43,7 +35,6 @@
     "@trpc/client": "^11.10.0",
     "@trpc/server": "^11.10.0",
     "@trpc/tanstack-react-query": "^11.10.0",
-    "@xyflow/react": "^12.10.0",
     "ai": "^6.0.91",
     "bcryptjs": "^3.0.3",
     "better-auth": "^1.4.18",
@@ -94,7 +85,6 @@
     "concurrently": "^9.2.1",
     "eslint": "^10",
     "eslint-config-next": "16.1.6",
-    "inngest-cli": "^1.17.1",
     "mprocs": "^0.8.3",
     "prisma": "^7.4.0",
     "tailwindcss": "^4",
