@@ -1,12 +1,12 @@
 generator client {
   provider      = "prisma-client-js"
   output        = "../lib/generated/prisma"
-  binaryTargets = ["native", "rhel-openssl-3.0.x"]
+  binaryTargets = ["native", "windows", "rhel-openssl-3.0.x"]
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  // url      = env("DATABASE_URL")
 }
 
 // Enums
