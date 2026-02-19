@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 
 import { openSans } from "@/fonts";
+import EmojiPicker, { EmojiClickData, Theme } from "emoji-picker-react";
 import { useCurrentUser } from "@/features/users/hooks/use-users";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -71,7 +72,8 @@ type IncomingSocketMessage = {
   time: string;
 };
 
-const SKELETON_COUNT = 6;
+const SKELETON_COUNT = 5; // 5-7 skeleton items for loading state
+// const SKELETON_COUNT = Math.floor(Math.random() * 3) + 4; // 5-7 skeleton items for loading state
 
 const channels: Channel[] = [
   {
@@ -178,6 +180,9 @@ export default function Forum() {
   const [composer, setComposer] = useState("");
   const [activeChannel, setActiveChannel] = useState(channels[0]?.id ?? "global-floor");
   const [unseenNewMessages, setUnseenNewMessages] = useState(0);
+
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   const messages = useMemo(() => {
     if (!serverMessages?.pages) return [];
@@ -364,6 +369,8 @@ export default function Forum() {
   const sendMessage = () => {
     if (!composer.trim() || !connected || !socket) return;
 
+    setShowEmojiPicker(false);
+
     const tempId = `temp-${user?.id}-${Date.now()}`;
 
     const optimistic = {
@@ -462,6 +469,28 @@ export default function Forum() {
     return diffMs > 5 * 60 * 60 * 1000;
   }
 
+  const onEmojiClick = (emoji: EmojiClickData) => {
+    const el = textareaRef.current;
+    if (!el) return;
+
+    const start = el.selectionStart;
+    const end = el.selectionEnd;
+
+    const newText =
+      composer.slice(0, start) +
+      emoji.emoji +
+      composer.slice(end);
+
+    setComposer(newText);
+
+    // Restore cursor position
+    requestAnimationFrame(() => {
+      el.focus();
+      el.selectionStart = el.selectionEnd = start + emoji.emoji.length;
+    });
+  };
+
+
   return (
     <div className={`${openSans.className} relative h-full p-1 sm:p-4 md:px-1.5 md:py-2`}>
       <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,oklch(0.72_0.17_293/.12),transparent_42%),radial-gradient(circle_at_bottom_right,oklch(0.71_0.2_160/.08),transparent_40%)]" />
@@ -478,15 +507,17 @@ export default function Forum() {
             </div>
 
             <div className="flex items-center gap-1">
-
               <Button variant="ghost" size="icon" aria-label="Pinned notes">
                 <Tooltip>
-
-                  {
-                    connected ? <TooltipTrigger><Globe className={`size-4 ${connected ? "text-emerald-500" : "text-red-500"
-                      }`} /> </TooltipTrigger> : <TooltipTrigger><GlobeLock className={`size-4 ${connected ? "text-emerald-500" : "text-red-500"
-                        }`} /></TooltipTrigger>
-                  }
+                  {connected ? (
+                    <TooltipTrigger asChild>
+                      <Globe className={`size-4 ${connected ? "text-emerald-500" : "text-red-500"}`} />
+                    </TooltipTrigger>
+                  ) : (
+                    <TooltipTrigger asChild>
+                      <GlobeLock className={`size-4 ${connected ? "text-emerald-500" : "text-red-500"}`} />
+                    </TooltipTrigger>
+                  )}
 
                   <TooltipContent>
                     <p>{connected ? "Connected" : "Disconnected"}</p>
@@ -642,18 +673,39 @@ export default function Forum() {
           <div className="border-t bg-background/65 p-2 sm:p-3">
             <div className="flex items-center justify-between rounded-sm border bg-card/80 p-2 gap-2">
               <div className="flex items-center bg-muted-foreground/10 rounded-sm py-0.5">
-                <Button variant="ghost" size="icon-sm" aria-label="Attach file">
+                {/* <Button variant="ghost" size="icon-sm" aria-label="Attach file">
                   <Paperclip className="size-4" />
-                </Button>
-                <Button variant="ghost" size="icon-sm" aria-label="Emoji">
-                  <Smile className="size-4" />
-                </Button>
-                <Button variant="ghost" size="icon-sm" aria-label="Voice input">
+                </Button> */}
+                <div className="relative">
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label="Emoji"
+                    onClick={() => setShowEmojiPicker((v) => !v)}
+                  >
+                    <Smile className="size-4" />
+                  </Button>
+
+                  {showEmojiPicker && (
+                    <div className="absolute bottom-12 left-0 z-50">
+                      <EmojiPicker
+                        theme={Theme.DARK}
+                        onEmojiClick={onEmojiClick}
+                        searchDisabled={false}
+                        skinTonesDisabled
+                        height={350}
+                        width={300}
+                      />
+                    </div>
+                  )}
+                </div>
+                {/* <Button variant="ghost" size="icon-sm" aria-label="Voice input">
                   <Mic className="size-4" />
-                </Button>
+                </Button> */}
               </div>
 
               <Textarea
+                ref={textareaRef}
                 value={composer}
                 onChange={(event) => setComposer(event.target.value)}
                 onKeyDown={(event) => {
