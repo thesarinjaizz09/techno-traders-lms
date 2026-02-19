@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "dev:prisma": "prisma generate && next dev",
+    "dev:prisma": "prisma generate && npm run postbuild && next dev",
     "build": "next build",
     "inngest:dev": "inngest-cli dev",
     "start": "next start",
@@ -12,7 +12,8 @@
     "dev:mprocs": "mprocs",
     "lint": "eslint",
     "db:studio": "npx prisma studio",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "postbuild": "cp -r ./lib/generated/prisma/libquery_engine-rhel-openssl-3.0.x.so.node .next/server/ || true && cp -r ./lib/generated/prisma/libquery_engine-rhel-openssl-3.0.x.so.node .next/server/chunks/ || true"
   },
   "prisma": {
     "schema": "./prisma/schema.prisma"
