@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "dev:prisma": "prisma generate && next dev",
-    "build": "prisma generate && next build",
+    "build": "next build",
     "inngest:dev": "inngest-cli dev",
     "start": "next start",
     "dev:all": "concurrently \"npm run dev\" \"npm run inngest:dev\"",
@@ -13,6 +13,9 @@
     "lint": "eslint",
     "db:studio": "npx prisma studio",
     "postinstall": "prisma generate"
+  },
+  "prisma": {
+    "schema": "./prisma/schema.prisma"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^2.0.45",
