@@ -13,7 +13,7 @@ import { ensurePrismaConnected } from "./prisma";
 // Configuration (pull from env for prod)
 // ────────────────────────────────────────────────
 const PORT = parseInt(process.env.PORT || "4000", 10);
-const HOST = process.env.HOST || "localhost";
+const HOST = process.env.HOST || "0.0.0.0";
 
 // ────────────────────────────────────────────────
 // Fastify instance with production defaults
@@ -53,6 +53,10 @@ async function startServer() {
         // 3. Setup Socket.IO (must be after HTTP server creation, before listen)
         const httpServer = app.server; // Fastify's underlying HTTP server
         await setupSocket(httpServer);
+
+        app.get('/health', async (req, res) => {
+            return { status: 'ok', uptime: process.uptime() };
+        });
 
         // 4. Start listening
         await app.listen({ port: PORT, host: HOST });

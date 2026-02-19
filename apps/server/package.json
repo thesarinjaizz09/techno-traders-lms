@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "dev": "prisma generate && nodemon"
+    "dev": "prisma generate && nodemon",
+    "start": "prisma generate && ts-node server.ts"
   },
   "keywords": [],
   "author": "",
