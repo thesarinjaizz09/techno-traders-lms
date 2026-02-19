@@ -72,9 +72,7 @@ export async function setupSocket(httpServer: any) {
                 return next(new Error("No cookies"));
             }
 
-            const cookies = parseCookie(rawCookie);
-
-            const sessionToken = cookies["better-auth.session_token"]?.substring(0, cookies["better-auth.session_token"].indexOf(".")) || null;
+            const sessionToken = rawCookie
 
             if (!sessionToken) {
                 return next(new Error("Not authenticated"));
