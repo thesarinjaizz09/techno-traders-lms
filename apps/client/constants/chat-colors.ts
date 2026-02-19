@@ -56,7 +56,6 @@ function hashUserId(userId: string) {
 
 export function getColorForUser(userId: string) {
     const index = hashUserId(userId) % USER_COLORS.length;
-    console.log(index);
     return USER_COLORS[index];
 }
 
