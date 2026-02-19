@@ -196,6 +196,10 @@ export async function setupSocket(httpServer: any) {
                 };
 
                 // 4. Broadcast via Socket.IO → Redis adapter handles propagation
+                socket.broadcast.to(GLOBAL_ROOM).emit("typing:stop", {
+                    userId: user.id,
+                    name: user.name,
+                });
                 io.to(GLOBAL_ROOM).emit("message:new", payload);
             } catch (err) {
                 console.error("Failed to process message:", err);

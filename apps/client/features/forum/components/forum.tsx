@@ -43,6 +43,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { useMessages, useMessagesCache } from "../hooks/use-forum";
 import { useSocket } from "@/providers/socket-provider";
+import { cn } from "@/lib/utils";
 
 type Channel = {
   id: string;
@@ -418,7 +419,7 @@ export default function Forum() {
     if (!composer.trim() || !connected || !socket) return;
 
     if (isTypingRef.current) {
-      socket.emit("typing:stop");
+      // socket.emit("typing:stop");
       isTypingRef.current = false;
     }
 
@@ -687,7 +688,7 @@ export default function Forum() {
             })}
 
             {!isLoading && Object.keys(typingUsers).length > 0 && (
-              <div className="mt-5 pb-2 flex items-start gap-4 animate-fade-in">
+              <div className={cn(Object.keys(typingUsers).length > 1 ? "gap-4" : "gap-3", "mt-5 pb-2 flex items-start animate-fade-in")}>
                 {/* Avatar(s) of typing user(s) – show up to 3, overlap if more */}
                 <div className="relative flex -space-x-1.5">
                   {Object.keys(typingUsers)
@@ -695,15 +696,15 @@ export default function Forum() {
                     .map((userId) => {
                       const userName = typingUsers[userId]; // or fetch full user if you have it
                       return (
-                        <Avatar key={userId} className="size-8 rounded-sm border-2 border-background">
-                          <AvatarFallback className="text-[11px] bg-primary/20 text-primary">
+                        <Avatar key={userId} className="size-8 rounded-sm">
+                          <AvatarFallback className="text-[11px] text-muted-foreground rounded-sm bg-primary/20">
                             {initials(userName || "User")}
                           </AvatarFallback>
                         </Avatar>
                       );
                     })}
                   {Object.keys(typingUsers).length > 1 && (
-                    <div className="absolute -top-3.5 -right-4.5 size-5 rounded-full bg-muted flex items-center justify-center text-[10px] font-medium border-2 border-background ml-1">
+                    <div className="absolute -top-3.5 -right-4.5 size-5 rounded-full bg-muted flex items-center justify-center text-[10px] ml-1 border border-primary text-center flex items-center justify-center">
                       {Object.keys(typingUsers).length - 1 > 9 ? "9+" : `+${Object.keys(typingUsers).length - 1}`}
                     </div>
                   )}
@@ -828,8 +829,10 @@ export default function Forum() {
                   if (isTypingRef.current) {
                     if (!socket || connected) return;
 
-                    // socket.emit("typing:stop");
-                    // isTypingRef.current = false;
+                    typingTimeoutRef.current = setTimeout(() => {
+                      isTypingRef.current = false;
+                      socket.emit("typing:stop");
+                    }, 1000);
                   }
                 }}
                 placeholder={`Message #${channel?.name}`}
