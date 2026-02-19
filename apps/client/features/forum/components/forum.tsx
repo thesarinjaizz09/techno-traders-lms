@@ -593,6 +593,13 @@ export default function Forum() {
     });
   };
 
+  // Filter system messages
+  const systemMessages = orderedMessages.filter((msg) => msg.type === "SYSTEM");
+
+  // Check if any real user message exists
+  const hasUserMessages = orderedMessages.some((msg) => msg.type !== "SYSTEM");
+  console.log("Total messages:", messages.length, "System messages:", systemMessages.length, "Has user messages?", hasUserMessages);
+
   return (
     <div className={`${openSans.className} relative h-full p-1 sm:p-4 md:px-1.5 md:py-2`}>
       <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,oklch(0.72_0.17_293/.12),transparent_42%),radial-gradient(circle_at_bottom_right,oklch(0.71_0.2_160/.08),transparent_40%)]" />
@@ -726,82 +733,144 @@ export default function Forum() {
               </div>
             )}
 
-            {!isLoading && orderedMessages.map((item, i) => {
-              const mine = item.role === "you";
+            {!isLoading && (
+              <>
+                {hasUserMessages ? (
+                  // Normal mode: show all messages (user + system)
+                  orderedMessages.map((item, i) => {
+                    const mine = item.role === "you";
+                    const prev = orderedMessages[i - 1];
+                    const showTime = shouldShowTimestamp(prev, item);
 
-              const prev = orderedMessages[i - 1];
-              const showTime = shouldShowTimestamp(prev, item);
+                    return (
+                      <div key={`item-${item.id}`} className="space-y-1">
+                        {showTime && (
+                          <div className="flex justify-center my-4">
+                            <Badge variant="secondary" className="rounded-sm px-3 py-1.5 text-muted-foreground text-xs">
+                              <CalendarDays className="size-3.5 inline-block mr-1.5 text-primary" />
+                              {getTimestampBadgeLabel(item)}
+                            </Badge>
+                          </div>
+                        )}
 
-              return (
-                <div key={`item-${item.id}-${Math.random()}`} className="space-y-1">
-                  {showTime && (
-                    <div className="flex justify-center my-4">
-                      <Badge variant="secondary" className="rounded-sm px-3 py-1.5 text-muted-foreground text-xs">
-                        <CalendarDays className="size-3.5 inline-block mr-1.5 text-primary" />
-                        {getTimestampBadgeLabel(item)}
-                      </Badge>
-                    </div>
-                  )}
+                        {item.type === "SYSTEM" && (
+                          <div className="flex justify-center my-4">
+                            <span className="rounded-sm bg-muted px-4 py-2 text-xs text-muted-foreground flex items-center justify-center">
+                              <UserCircle className={cn("size-3.5 inline-block mr-2.5", item.user === user?.name ? "text-primary" : `${getColorForUser(item.userId)?.name}`)} />
+                              {item.message} at {item.time}
+                            </span>
+                          </div>
+                        )}
 
-                  {item.type === "SYSTEM" && (
-                    <div key={item.id} className="flex justify-center my-4">
-                      <span className="rounded-sm bg-muted px-4 py-2 text-xs text-muted-foreground flex items-center justify-center">
-                        <UserCircle className={cn("size-3.5 inline-block mr-2.5", item.user === user?.name ? "text-primary" : `${getColorForUser(item.userId)?.name}`)} />
-                        {item.message} at {item.time}
-                      </span>
-                    </div>
-                  )}
+                        {item.type !== "SYSTEM" && (
+                          <div className={`flex flex-row gap-2.5 justify-start ${mine && "flex-row-reverse"}`}>
+                            <Avatar className="mt-0.5 size-8 border rounded-sm">
+                              <AvatarFallback className={cn("text-[11px] rounded-sm", item.user === user?.name ? "text-primary" : `${getColorForUser(item.userId)?.name}`)}>
+                                {initials(item.user)}
+                              </AvatarFallback>
+                            </Avatar>
 
-                  {item.type !== "SYSTEM" && <div key={item.id} className={`flex flex-row gap-2.5 justify-start ${mine && "flex-row-reverse"}`}>
-                    <Avatar className="mt-0.5 size-8 border rounded-sm">
-                      <AvatarFallback className={cn("text-[11px] rounded-sm", item.user === user?.name ? "text-primary" : `${getColorForUser(item.userId)?.name}`)}>{initials(item.user)}</AvatarFallback>
-                    </Avatar>
+                            <div
+                              className={`
+                      relative max-w-[85%] space-y-1 rounded-sm border px-3 py-2 sm:max-w-[72%]
+                      ${mine ? "border-border/80 bg-muted/60" : "bg-background/50 border-border/80"}
+                    `}
+                            >
+                              <div
+                                className={`
+                        flex items-center gap-2 text-[10px] border bg-muted-foreground/20 px-2 py-1 rounded-sm w-max mb-2.5
+                        ${mine ? "ml-auto justify-end" : ""}
+                      `}
+                              >
+                                <span className={cn(item.user === user?.name ? "text-primary" : `${getColorForUser(item.userId)?.name}`, "font-semibold leading-relaxed")}>
+                                  {item.user === user?.name ? "You" : item.user}
+                                </span>
+                                <span className="text-muted-foreground">{getMessageTime(item)}</span>
+                              </div>
 
-                    <div
-                      className={`
-    relative max-w-[85%] space-y-1 rounded-sm border px-3 py-2 sm:max-w-[72%]
-    ${mine
-                          ? "border-border/80 bg-muted/60"
-                          : `bg-background/50 border-border/80` // Default to bg-muted if no color found
-                        }
-  `}
-                    >
-                      <div
-                        className={`
-      flex items-center gap-2 text-[10px] border bg-muted-foreground/20 px-2 py-1 rounded-sm w-max mb-2.5
-      ${mine ? "ml-auto justify-end" : ""}
-    `}
-                      >
-                        <span className={cn(item.user === user?.name ? "text-primary" : `${getColorForUser(item.userId)?.name}`, "font-semibold leading-relaxed")}>
-                          {item.user === user?.name ? "You" : item.user}
-                        </span>
-                        <span className="text-muted-foreground">{getMessageTime(item)}</span>
+                              <p className="text-[12px] leading-relaxed break-all whitespace-pre-wrap pr-10 mb-0">
+                                {item.message}
+                              </p>
+
+                              {mine && (
+                                <div className="absolute bottom-2.5 right-2 flex items-center text-muted-foreground/90 pointer-events-none">
+                                  {isOptimisticMessageId(item.id) ? <Check className="size-3.5" /> : <CheckCheck className="size-3.5" />}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
+                ) : (
+                  // No user messages → show limited system messages + empty state
+                  <>
+                    {/* Empty state UI (encourages first real message) */}
+                    <div className="flex flex-col items-center justify-center h-full py-12 px-4 text-center animate-fade-in">
+                      {/* Subtle background gradient circle */}
+                      <div className="relative mb-6">
+                        <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary/10 to-primary/5 blur-xl opacity-70" />
+                        <div className="relative size-16 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center border border-primary/30 shadow-sm">
+                          <MessageSquare className="size-7 text-primary/70" strokeWidth={1.5} />
+                        </div>
                       </div>
 
-                      <p className="text-[12px] leading-relaxed break-all whitespace-pre-wrap pr-10 mb-0">
-                        {item.message}
+                      {/* Main heading */}
+                      <h3 className="text-lg font-semibold text-foreground mb-2">
+                        Welcome to #{channel?.name}
+                      </h3>
+
+                      {/* Description */}
+                      <p className="text-sm text-muted-foreground max-w-md mb-6 leading-relaxed">
+                        This is the start of the <span className="font-medium text-foreground">#{channel?.name}</span> conversation.<br />
+                        Say hi, share a trade idea, or ask a question — the floor is yours!
                       </p>
 
-                      {mine && (
-                        <div
-                          className="
-        absolute bottom-2.5 right-2
-        flex items-center text-muted-foreground/90
-        pointer-events-none
-      "
+                      {/* Spark conversation prompts */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-lg mb-8">
+                        <button
+                          onClick={() => {
+                            setComposer("Hey everyone! What's the market vibe today? 🚀");
+                            textareaRef.current?.focus();
+                          }}
+                          className="flex items-center gap-3 rounded-sm border bg-card/50 px-4 py-3 text-sm hover:bg-accent/50 transition-colors text-left group"
                         >
-                          {isOptimisticMessageId(item.id) ? (
-                            <Check className="size-3.5" />
-                          ) : (
-                            <CheckCheck className="size-3.5" />
-                          )}
-                        </div>
-                      )}
+                          <div className="size-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                            <MessageSquare className="size-3.5 text-primary" />
+                          </div>
+                          <div>
+                            <p className="font-medium group-hover:text-primary transition-colors">Say hi to the community</p>
+                            <p className="text-xs text-muted-foreground">Break the ice</p>
+                          </div>
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            setComposer("Just spotted a setup on [asset]... thoughts? 📈");
+                            textareaRef.current?.focus();
+                          }}
+                          className="flex items-center gap-3 rounded-sm border bg-card/50 px-4 py-3 text-sm hover:bg-accent/50 transition-colors text-left group"
+                        >
+                          <div className="size-9 rounded-full bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
+                            <TrendingUp className="size-4 text-emerald-500" />
+                          </div>
+                          <div>
+                            <p className="font-medium group-hover:text-emerald-600 transition-colors">Share a trade idea</p>
+                            <p className="text-xs text-muted-foreground">Start the discussion</p>
+                          </div>
+                        </button>
+                      </div>
+
+                      {/* Subtle footer encouragement */}
+                      <p className="text-xs text-muted-foreground/70 italic">
+                        First message gets the floor 🔥
+                      </p>
                     </div>
-                  </div>}
-                </div>
-              );
-            })}
+                  </>
+                )}
+              </>
+            )}
 
             {!isLoading && Object.keys(typingUsers).length > 0 && (
               <div className={cn(Object.keys(typingUsers).length > 1 ? "gap-4" : "gap-3", "mt-5 pb-2 flex items-start animate-fade-in")}>
