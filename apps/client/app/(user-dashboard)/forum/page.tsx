@@ -6,6 +6,7 @@ import { isAuthenticated } from "@/lib/auth/utils"
 import { prefetchMessages } from "@/features/forum/server/prefetch"
 import Forum from "@/features/forum/components/forum"
 import { ForumContainer } from "@/features/forum/components/container"
+import { ForumError } from "@/features/forum/components/error"
 
 export const metadata = generatePageMetadata({
   title: "Forum",
@@ -29,7 +30,7 @@ export default async function Page({ searchParams }: PageProps) {
   return (
     <HydrateClient>
       <ForumContainer>
-        <ErrorBoundary fallback={<div className="p-4 bg-red-100 text-red-800 rounded">Failed to load forum. Please try again later.</div>}>
+        <ErrorBoundary fallback={<ForumError />}>
           <Forum />
         </ErrorBoundary>
       </ForumContainer>
