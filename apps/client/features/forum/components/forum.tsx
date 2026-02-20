@@ -26,14 +26,11 @@ import {
 
 import { openSans } from "@/fonts";
 import EmojiPicker, { EmojiClickData, Theme } from "emoji-picker-react";
-import type { inferRouterOutputs } from "@trpc/server";
-import type { AppRouter } from "@/trpc/routers/_app";
 import { useCurrentUser } from "@/features/users/hooks/use-users";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import {
   Sheet,
   SheetContent,
@@ -51,15 +48,16 @@ import { useMessages, useMessagesCache } from "../hooks/use-forum";
 import { useSocket } from "@/providers/socket-provider";
 import { cn } from "@/lib/utils";
 import { getColorForUser } from "@/constants/chat-colors";
-import { channels, ChatMessage, IncomingSocketMessage, initials, isOptimisticMessageId, onlineMembers, SKELETON_COUNT } from "../utils";
+import { channels, ChatMessage, IncomingSocketMessage, initials, isOptimisticMessageId, SKELETON_COUNT } from "../utils";
 import { MembersPanel } from "./members";
 import { SkeletonMessage } from "./loading";
 import { EmptyState } from "./empty";
+import { Spinner } from "@/components/ui/spinner";
 
 export default function Forum() {
   const cache = useMessagesCache();
   const { data: user } = useCurrentUser();
-  const { socket, connected } = useSocket();
+  const { socket, connected, isConnecting } = useSocket();
   const { data: serverMessages, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useMessages()
 
   const [typingUsers, setTypingUsers] = useState<Record<string, string>>({});
@@ -424,7 +422,9 @@ export default function Forum() {
             <div className="flex items-center gap-1">
               <Button variant="ghost" size="icon" aria-label="Pinned notes">
                 <Tooltip>
-                  {connected ? (
+                  {isConnecting ? <TooltipTrigger asChild>
+                    <Spinner className="size-4 animate-spin text-amber-500" />
+                  </TooltipTrigger> : connected ? (
                     <TooltipTrigger asChild>
                       <Globe className={`size-4 ${connected ? "text-emerald-500" : "text-red-500"}`} />
                     </TooltipTrigger>
@@ -435,7 +435,7 @@ export default function Forum() {
                   )}
 
                   <TooltipContent>
-                    <p>{connected ? "Connected" : "Disconnected"}</p>
+                    <p>{isConnecting ? "Connecting..." : connected ? "Connected" : "Disconnected"}</p>
                   </TooltipContent>
                 </Tooltip>
               </Button>
