@@ -29,8 +29,8 @@ export const SKELETON_COUNT = 5;
 
 export const channels: Channel[] = [
     {
-        id: "global-floor",
-        name: "Traders Community",
+        id: "global-community",
+        name: "Global Community",
         description: "Live market talk, setups, and execution updates.",
         unread: 8,
     },

@@ -72,7 +72,7 @@ export default function Forum() {
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const [composer, setComposer] = useState("");
-  const [activeChannel, setActiveChannel] = useState(channels[0]?.id ?? "global-floor");
+  const [activeChannel, setActiveChannel] = useState(channels[0]?.id ?? "global-community");
   const [unseenNewMessages, setUnseenNewMessages] = useState(0);
 
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -457,7 +457,7 @@ export default function Forum() {
                     <SheetTitle>Room Activity</SheetTitle>
                   </SheetHeader>
                   <div className="p-3">
-                    <MembersPanel />
+                    <MembersPanel channelId={activeChannel} />
                   </div>
                 </SheetContent>
               </Sheet>

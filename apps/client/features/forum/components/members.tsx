@@ -2,17 +2,18 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Card } from "@/components/ui/card";
 import { useOnlineUsers } from "@/providers/online-users-providers";
+import { channels } from "../utils";
 
 
-export function MembersPanel() {
+export function MembersPanel({ channelId }: { channelId: string }) {
   const { users } = useOnlineUsers();
 
   return (
     <Card className="h-full overflow-hidden border-border/80 bg-card/60 backdrop-blur-sm">
       <div className="border-b p-4">
-        <p className="text-sm font-semibold tracking-wide">Room Activity</p>
+        <p className="text-sm font-semibold tracking-wide">{channels.find(c => c.id === channelId)?.name}</p>
         <p className="mt-1 text-xs text-muted-foreground">
-          Traders currently participating.
+          Members currently participating.
         </p>
       </div>
 
