@@ -17,7 +17,7 @@ const SocketContext = createContext<SocketContextValue>({
   socket: null,
   connected: false,
   isConnecting: false,
-  reconnect: () => {},
+  reconnect: () => { },
 });
 
 export function SocketProvider({ children }: { children: React.ReactNode }) {
@@ -56,6 +56,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
 
     socket.on("connect", () => {
       console.log("✅ Socket connected", socket.id);
+      socket.emit("presence:request");
       setConnected(true);
       setIsConnecting(false);
     });

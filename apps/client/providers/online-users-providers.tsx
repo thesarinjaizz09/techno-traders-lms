@@ -74,6 +74,7 @@ export function OnlineUsersProvider({ children }: { children: React.ReactNode })
         };
 
         const handlePresenceSync = (list: PresenceUser[]) => {
+            // console.log("Received presence:sync with users:", list);
             const { members, guests } = list.reduce(
                 (acc, user) => {
                     const mapped: OnlineUser = {
@@ -103,6 +104,8 @@ export function OnlineUsersProvider({ children }: { children: React.ReactNode })
         socket.on("user:online", handleOnline);
         socket.on("private:user:online", handlePrivateOnline);
         socket.on("user:offline", handleOffline);
+
+        socket.emit("presence:request");
 
         return () => {
             socket.off("presence:sync", handlePresenceSync);

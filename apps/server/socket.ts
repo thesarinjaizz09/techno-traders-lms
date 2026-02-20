@@ -126,7 +126,11 @@ export async function setupSocket(httpServer: any) {
 
         addUser(payload);
 
-        socket.emit("presence:sync", getAllUsers());
+        io.to(GLOBAL_ROOM).emit("presence:sync", getAllUsers());
+
+        socket.on("presence:request", () => {
+            socket.emit("presence:sync", getAllUsers());
+        });
 
         if (user.isMember) {
             socket.broadcast.to(GLOBAL_ROOM).emit("private:user:online", {
