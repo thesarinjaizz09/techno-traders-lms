@@ -20,7 +20,6 @@ import {
   Settings2,
   Smile,
   TrendingUp,
-  User,
   UserCircle,
   Users,
 } from "lucide-react";
@@ -52,124 +51,10 @@ import { useMessages, useMessagesCache } from "../hooks/use-forum";
 import { useSocket } from "@/providers/socket-provider";
 import { cn } from "@/lib/utils";
 import { getColorForUser } from "@/constants/chat-colors";
-
-type Channel = {
-  id: string;
-  name: string;
-  description: string;
-  unread?: number;
-};
-
-type RouterOutput = inferRouterOutputs<AppRouter>;
-type ChatMessage = RouterOutput["messages"]["getInfinite"]["items"][number] & {
-  reactions?: { emoji: string; count: number }[];
-};
-
-type IncomingSocketMessage = {
-  id: string;
-  userId: string;
-  clientMessageId?: string;
-  user: string;
-  role: string;
-  message: string;
-  createdAt: string;
-  time: string;
-  type?: "SYSTEM" | "USER";
-};
-
-const SKELETON_COUNT = 5; // 5-7 skeleton items for loading state
-// const SKELETON_COUNT = Math.floor(Math.random() * 3) + 4; // 5-7 skeleton items for loading state
-
-const channels: Channel[] = [
-  {
-    id: "global-floor",
-    name: "Traders Community",
-    description: "Live market talk, setups, and execution updates.",
-    unread: 8,
-  }
-];
-
-const onlineMembers = [
-  { name: "Nikhil S.", role: "Mentor", status: "Live" },
-  { name: "Aarav M.", role: "Pro Member", status: "Online" },
-  { name: "Rhea K.", role: "Member", status: "Online" },
-  { name: "Krishna V.", role: "Member", status: "Away" },
-  { name: "Anaya D.", role: "Member", status: "Online" },
-  { name: "Dev P.", role: "Mentor", status: "Live" },
-];
-
-function initials(name: string) {
-  return name
-    .split(" ")
-    .map((part) => part[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
-}
-
-function isOptimisticMessageId(messageId: string) {
-  return messageId.startsWith("temp-");
-}
-
-function MembersPanel() {
-  return (
-    <Card className="h-full gap-0 overflow-hidden border-border/80 bg-card/60 py-0 backdrop-blur-sm">
-      <div className="border-b p-4">
-        <p className="text-sm font-semibold tracking-wide">Room Activity</p>
-        <p className="mt-1 text-xs text-muted-foreground">Traders currently participating.</p>
-      </div>
-
-      <div className="space-y-3 p-3">
-        <div className="rounded-md border bg-background/50 p-3">
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-muted-foreground">Online now</span>
-            <Badge variant="secondary">{onlineMembers.length}</Badge>
-          </div>
-          <div className="mt-2 flex items-center justify-between text-xs">
-            <span className="text-muted-foreground">Messages today</span>
-            <span className="font-medium">1,283</span>
-          </div>
-          <div className="mt-2 flex items-center justify-between text-xs">
-            <span className="text-muted-foreground">Pinned notes</span>
-            <span className="font-medium">12</span>
-          </div>
-        </div>
-
-        <Separator />
-
-        <div className="space-y-2">
-          {onlineMembers.map((member) => {
-            const live = member.status === "Live";
-
-            return (
-              <div key={member.name} className="flex items-center justify-between rounded-md px-2 py-1.5">
-                <div className="flex items-center gap-2">
-                  <span
-                    className={`size-2 rounded-full ${live
-                      ? "bg-emerald-500"
-                      : member.status === "Away"
-                        ? "bg-amber-500"
-                        : "bg-primary"
-                      }`}
-                  />
-                  <div>
-                    <p className="text-xs font-medium">{member.name}</p>
-                    <p className="text-[11px] text-muted-foreground">{member.role}</p>
-                  </div>
-                </div>
-                {live ? (
-                  <Badge className="h-5 rounded-full bg-emerald-600 px-2 text-[10px] text-white hover:bg-emerald-600">
-                    Live
-                  </Badge>
-                ) : null}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </Card>
-  );
-}
+import { channels, ChatMessage, IncomingSocketMessage, initials, isOptimisticMessageId, onlineMembers, SKELETON_COUNT } from "../utils";
+import { MembersPanel } from "./members";
+import { SkeletonMessage } from "./loading";
+import { EmptyState } from "./empty";
 
 export default function Forum() {
   const cache = useMessagesCache();
@@ -500,78 +385,6 @@ export default function Forum() {
     setComposer("");
   };
 
-  function getMessageDate(message?: ChatMessage) {
-    if (!message?.createdAt) return null;
-
-    const date = new Date(message.createdAt);
-    if (Number.isNaN(date.getTime())) return null;
-
-    return date;
-  }
-
-  function isSameDay(a: Date, b: Date) {
-    return (
-      a.getFullYear() === b.getFullYear() &&
-      a.getMonth() === b.getMonth() &&
-      a.getDate() === b.getDate()
-    );
-  }
-
-  function formatTimeLabel(date: Date) {
-    return date.toLocaleTimeString("en-IN", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    });
-  }
-
-  function formatDateLabel(date: Date) {
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
-  }
-
-  function getTimestampBadgeLabel(message: ChatMessage) {
-    const messageDate = getMessageDate(message);
-    if (!messageDate) return message.time;
-
-    const now = new Date();
-    const yesterday = new Date(now);
-    yesterday.setDate(now.getDate() - 1);
-
-    const timeLabel = formatTimeLabel(messageDate);
-
-    if (isSameDay(messageDate, now)) {
-      return `Today`;
-    }
-
-    if (isSameDay(messageDate, yesterday)) {
-      return `Yesterday`;
-    }
-
-    return `${formatDateLabel(messageDate)}`;
-  }
-
-  function getMessageTime(message: ChatMessage) {
-    const messageDate = getMessageDate(message);
-    if (!messageDate) return message.time;
-    return formatTimeLabel(messageDate);
-  }
-
-  function shouldShowTimestamp(prev?: ChatMessage, curr?: ChatMessage) {
-    if (!prev || !curr) return true;
-
-    const prevDate = getMessageDate(prev);
-    const currDate = getMessageDate(curr);
-    if (!prevDate || !currDate) return true;
-
-    if (!isSameDay(prevDate, currDate)) return true;
-
-    const diffMs = Math.abs(currDate.getTime() - prevDate.getTime());
-    return diffMs > 5 * 60 * 60 * 1000;
-  }
-
   const onEmojiClick = (emoji: EmojiClickData) => {
     const el = textareaRef.current;
     if (!el) return;
@@ -592,9 +405,6 @@ export default function Forum() {
       el.selectionStart = el.selectionEnd = start + emoji.emoji.length;
     });
   };
-
-  // Check if any real user message exists
-  const hasUserMessages = orderedMessages.some((msg) => msg.type !== "SYSTEM");
 
   return (
     <div className={`${openSans.className} relative h-full p-1 sm:p-4 md:px-1.5 md:py-2`}>
@@ -659,66 +469,7 @@ export default function Forum() {
             )}
 
             {!isLoading && messages.length === 0 && (
-              <div className="flex flex-col items-center justify-center h-full py-12 px-4 text-center animate-fade-in">
-                {/* Subtle background gradient circle */}
-                <div className="relative mb-6">
-                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary/10 to-primary/5 blur-xl opacity-70" />
-                  <div className="relative size-16 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center border border-primary/30 shadow-sm">
-                    <MessageSquare className="size-7 text-primary/70" strokeWidth={1.5} />
-                  </div>
-                </div>
-
-                {/* Main heading */}
-                <h3 className="text-lg font-semibold text-foreground mb-2">
-                  Welcome to #{channel?.name}
-                </h3>
-
-                {/* Description */}
-                <p className="text-sm text-muted-foreground max-w-md mb-6 leading-relaxed">
-                  This is the start of the <span className="font-medium text-foreground">#{channel?.name}</span> conversation.<br />
-                  Say hi, share a trade idea, or ask a question — the floor is yours!
-                </p>
-
-                {/* Spark conversation prompts */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-lg mb-8">
-                  <button
-                    onClick={() => {
-                      setComposer("Hey everyone! What's the market vibe today? 🚀");
-                      textareaRef.current?.focus();
-                    }}
-                    className="flex items-center gap-3 rounded-sm border bg-card/50 px-4 py-3 text-sm hover:bg-accent/50 transition-colors text-left group"
-                  >
-                    <div className="size-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <MessageSquare className="size-3.5 text-primary" />
-                    </div>
-                    <div>
-                      <p className="font-medium group-hover:text-primary transition-colors">Say hi to the community</p>
-                      <p className="text-xs text-muted-foreground">Break the ice</p>
-                    </div>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      setComposer("Just spotted a setup on [asset]... thoughts? 📈");
-                      textareaRef.current?.focus();
-                    }}
-                    className="flex items-center gap-3 rounded-sm border bg-card/50 px-4 py-3 text-sm hover:bg-accent/50 transition-colors text-left group"
-                  >
-                    <div className="size-9 rounded-full bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
-                      <TrendingUp className="size-4 text-emerald-500" />
-                    </div>
-                    <div>
-                      <p className="font-medium group-hover:text-emerald-600 transition-colors">Share a trade idea</p>
-                      <p className="text-xs text-muted-foreground">Start the discussion</p>
-                    </div>
-                  </button>
-                </div>
-
-                {/* Subtle footer encouragement */}
-                <p className="text-xs text-muted-foreground/70 italic">
-                  First message gets the floor 🔥
-                </p>
-              </div>
+              <EmptyState channel={channel} setComposer={setComposer} textareaRef={textareaRef} />
             )}
 
             {isLoading && (
@@ -729,193 +480,9 @@ export default function Forum() {
               </div>
             )}
 
-            {!isLoading && (
-              <>
-                {hasUserMessages ? (
-                  // Normal mode: show all messages (user + system)
-                  orderedMessages.map((item, i) => {
-                    const mine = item.role === "you";
-                    const prev = orderedMessages[i - 1];
-                    const showTime = shouldShowTimestamp(prev, item);
+            <MessageBubble orderedMessages={orderedMessages} user={{ name: currentName }} isLoading={isLoading} channel={channel} setComposer={setComposer} textareaRef={textareaRef} />
 
-                    return (
-                      <div key={`item-${item.id}`} className="space-y-1">
-                        {showTime && (
-                          <div className="flex justify-center my-4">
-                            <Badge variant="secondary" className="rounded-sm px-3 py-1.5 text-muted-foreground text-xs">
-                              <CalendarDays className="size-3.5 inline-block mr-1.5 text-primary" />
-                              {getTimestampBadgeLabel(item)}
-                            </Badge>
-                          </div>
-                        )}
-
-                        {item.type === "SYSTEM" && (
-                          <div className="flex justify-center my-4">
-                            <span className="rounded-sm bg-muted px-4 py-2 text-xs text-muted-foreground flex items-center justify-center">
-                              <UserCircle className={cn("size-3.5 inline-block mr-2.5", item.user === user?.name ? "text-primary" : `${getColorForUser(item.userId)?.name}`)} />
-                              {item.message} at {item.time}
-                            </span>
-                          </div>
-                        )}
-
-                        {item.type !== "SYSTEM" && (
-                          <div className={`flex flex-row gap-2.5 justify-start ${mine && "flex-row-reverse"}`}>
-                            <Avatar className="mt-0.5 size-8 border rounded-sm">
-                              <AvatarFallback className={cn("text-[11px] rounded-sm", item.user === user?.name ? "text-primary" : `${getColorForUser(item.userId)?.name}`)}>
-                                {initials(item.user)}
-                              </AvatarFallback>
-                            </Avatar>
-
-                            <div
-                              className={`
-                      relative max-w-[85%] space-y-1 rounded-sm border px-3 py-2 sm:max-w-[72%]
-                      ${mine ? "border-border/80 bg-muted/60" : "bg-background/50 border-border/80"}
-                    `}
-                            >
-                              <div
-                                className={`
-                        flex items-center gap-2 text-[10px] border bg-muted-foreground/20 px-2 py-1 rounded-sm w-max mb-2.5
-                        ${mine ? "ml-auto justify-end" : ""}
-                      `}
-                              >
-                                <span className={cn(item.user === user?.name ? "text-primary" : `${getColorForUser(item.userId)?.name}`, "font-semibold leading-relaxed")}>
-                                  {item.user === user?.name ? "You" : item.user}
-                                </span>
-                                <span className="text-muted-foreground">{getMessageTime(item)}</span>
-                              </div>
-
-                              <p className="text-[12px] leading-relaxed break-all whitespace-pre-wrap pr-10 mb-0">
-                                {item.message}
-                              </p>
-
-                              {mine && (
-                                <div className="absolute bottom-2.5 right-2 flex items-center text-muted-foreground/90 pointer-events-none">
-                                  {isOptimisticMessageId(item.id) ? <Check className="size-3.5" /> : <CheckCheck className="size-3.5" />}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })
-                ) : (
-                  // No user messages → show limited system messages + empty state
-                  <>
-                    {/* Empty state UI (encourages first real message) */}
-                    <div className="flex flex-col items-center justify-center h-full py-12 px-4 text-center animate-fade-in">
-                      {/* Subtle background gradient circle */}
-                      <div className="relative mb-6">
-                        <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary/10 to-primary/5 blur-xl opacity-70" />
-                        <div className="relative size-16 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center border border-primary/30 shadow-sm">
-                          <MessageSquare className="size-7 text-primary/70" strokeWidth={1.5} />
-                        </div>
-                      </div>
-
-                      {/* Main heading */}
-                      <h3 className="text-lg font-semibold text-foreground mb-2">
-                        Welcome to #{channel?.name}
-                      </h3>
-
-                      {/* Description */}
-                      <p className="text-sm text-muted-foreground max-w-md mb-6 leading-relaxed">
-                        This is the start of the <span className="font-medium text-foreground">#{channel?.name}</span> conversation.<br />
-                        Say hi, share a trade idea, or ask a question — the floor is yours!
-                      </p>
-
-                      {/* Spark conversation prompts */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-lg mb-8">
-                        <button
-                          onClick={() => {
-                            setComposer("Hey everyone! What's the market vibe today? 🚀");
-                            textareaRef.current?.focus();
-                          }}
-                          className="flex items-center gap-3 rounded-sm border bg-card/50 px-4 py-3 text-sm hover:bg-accent/50 transition-colors text-left group"
-                        >
-                          <div className="size-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                            <MessageSquare className="size-3.5 text-primary" />
-                          </div>
-                          <div>
-                            <p className="font-medium group-hover:text-primary transition-colors">Say hi to the community</p>
-                            <p className="text-xs text-muted-foreground">Break the ice</p>
-                          </div>
-                        </button>
-
-                        <button
-                          onClick={() => {
-                            setComposer("Just spotted a setup on [asset]... thoughts? 📈");
-                            textareaRef.current?.focus();
-                          }}
-                          className="flex items-center gap-3 rounded-sm border bg-card/50 px-4 py-3 text-sm hover:bg-accent/50 transition-colors text-left group"
-                        >
-                          <div className="size-9 rounded-full bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
-                            <TrendingUp className="size-4 text-emerald-500" />
-                          </div>
-                          <div>
-                            <p className="font-medium group-hover:text-emerald-600 transition-colors">Share a trade idea</p>
-                            <p className="text-xs text-muted-foreground">Start the discussion</p>
-                          </div>
-                        </button>
-                      </div>
-
-                      {/* Subtle footer encouragement */}
-                      <p className="text-xs text-muted-foreground/70 italic">
-                        First message gets the floor 🔥
-                      </p>
-                    </div>
-                  </>
-                )}
-              </>
-            )}
-
-            {!isLoading && Object.keys(typingUsers).length > 0 && (
-              <div className={cn(Object.keys(typingUsers).length > 1 ? "gap-4" : "gap-3", "mt-5 pb-2 flex items-start animate-fade-in")}>
-                {/* Avatar(s) of typing user(s) – show up to 3, overlap if more */}
-                <div className="relative flex -space-x-1.5">
-                  {Object.keys(typingUsers)
-                    .slice(0, 1)
-                    .map((userId) => {
-                      const userName = typingUsers[userId]; // or fetch full user if you have it
-                      return (
-                        <Avatar key={userId} className="size-8 rounded-sm">
-                          <AvatarFallback className="text-[11px] text-muted-foreground rounded-sm bg-primary/20">
-                            {initials(userName || "User")}
-                          </AvatarFallback>
-                        </Avatar>
-                      );
-                    })}
-                  {Object.keys(typingUsers).length > 1 && (
-                    <div className="absolute -top-3.5 -right-4.5 size-5 rounded-full bg-muted flex items-center justify-center text-[10px] ml-1 border border-primary text-center flex items-center justify-center">
-                      {Object.keys(typingUsers).length - 1 > 9 ? "9+" : `+${Object.keys(typingUsers).length - 1}`}
-                    </div>
-                  )}
-                </div>
-
-                {/* Typing bubble skeleton */}
-                <div
-                  className={`
-        min-w-38 relative max-w-[70%] rounded-sm px-3 py-2
-        bg-muted/60 border border-border/50
-        shadow-sm
-      `}
-                >
-                  {/* Animated bouncing dots */}
-                  <div className="flex items-center gap-1 h-5">
-                    <div className="typing-dot w-1.5 h-1.5 rounded-full bg-muted-foreground/70 animate-bounce [animation-delay:0ms]"></div>
-                    <div className="typing-dot w-1.5 h-1.5 rounded-full bg-muted-foreground/70 animate-bounce [animation-delay:150ms]"></div>
-                    <div className="typing-dot w-1.5 h-1.5 rounded-full bg-muted-foreground/70 animate-bounce [animation-delay:300ms]"></div>
-                  </div>
-
-                  {/* Subtle user names if multiple */}
-                  {Object.keys(typingUsers).length >= 1 && (
-                    <div className="w-fit absolute -bottom-5 left-0.5 text-[10px] text-muted-foreground/80">
-                      {Object.values(typingUsers).slice(0, 2).join(", ")}
-                      {Object.keys(typingUsers).length > 2 && ` + ${Object.keys(typingUsers).length - 2}..`}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
+            <TypingIndicator typingUsers={typingUsers} isLoading={isLoading} />
           </div>
 
           {unseenNewMessages > 0 && (
@@ -1031,17 +598,225 @@ export default function Forum() {
   );
 }
 
-function SkeletonMessage({ reverse }: { reverse: boolean }) {
+const TypingIndicator = ({ typingUsers, isLoading }: { typingUsers: Record<string, string>, isLoading: boolean }) => {
   return (
-    <div className={`flex gap-2.5 ${reverse ? "flex-row-reverse" : ""}`}>
-      <Avatar className="size-8 rounded-sm">
-        <AvatarFallback className="animate-pulse bg-muted" />
-      </Avatar>
+    <>
+      {!isLoading && Object.keys(typingUsers).length > 0 && (
+        <div className={cn(Object.keys(typingUsers).length > 1 ? "gap-4" : "gap-3", "mt-5 pb-2 flex items-start animate-fade-in")}>
+          <div className="relative flex -space-x-1.5">
+            {Object.keys(typingUsers)
+              .slice(0, 1)
+              .map((userId) => {
+                const userName = typingUsers[userId];
+                return (
+                  <Avatar key={userId} className="size-8 rounded-sm">
+                    <AvatarFallback className="text-[11px] text-muted-foreground rounded-sm bg-primary/20">
+                      {initials(userName || "User")}
+                    </AvatarFallback>
+                  </Avatar>
+                );
+              })}
+            {Object.keys(typingUsers).length > 1 && (
+              <div className="absolute -top-3.5 -right-4.5 size-5 rounded-full bg-muted flex items-center justify-center text-[10px] ml-1 border border-primary text-center flex items-center justify-center">
+                {Object.keys(typingUsers).length - 1 > 9 ? "9+" : `+${Object.keys(typingUsers).length - 1}`}
+              </div>
+            )}
+          </div>
 
-      <div className="w-72 space-y-2 rounded-sm border bg-muted/40 p-3 animate-pulse">
-        <div className="h-3 w-24 rounded bg-muted-foreground/20" />
-        <div className="h-8 w-full rounded bg-muted-foreground/20" />
-      </div>
-    </div>
-  );
+          {/* Typing bubble skeleton */}
+          <div
+            className={`
+        min-w-38 relative max-w-[70%] rounded-sm px-3 py-2
+        bg-muted/60 border border-border/50
+        shadow-sm
+      `}
+          >
+            {/* Animated bouncing dots */}
+            <div className="flex items-center gap-1 h-5">
+              <div className="typing-dot w-1.5 h-1.5 rounded-full bg-muted-foreground/70 animate-bounce [animation-delay:0ms]"></div>
+              <div className="typing-dot w-1.5 h-1.5 rounded-full bg-muted-foreground/70 animate-bounce [animation-delay:150ms]"></div>
+              <div className="typing-dot w-1.5 h-1.5 rounded-full bg-muted-foreground/70 animate-bounce [animation-delay:300ms]"></div>
+            </div>
+
+            {/* Subtle user names if multiple */}
+            {Object.keys(typingUsers).length >= 1 && (
+              <div className="w-fit absolute -bottom-5 left-0.5 text-[10px] text-muted-foreground/80">
+                {Object.values(typingUsers).slice(0, 2).join(", ")}
+                {Object.keys(typingUsers).length > 2 && ` + ${Object.keys(typingUsers).length - 2}..`}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </>
+  )
+}
+
+const MessageBubble = ({
+  orderedMessages,
+  user,
+  isLoading,
+  channel,
+  setComposer,
+  textareaRef }:
+  {
+    orderedMessages: ChatMessage[],
+    user: { name: string },
+    isLoading: boolean,
+    channel: (typeof channels)[number] | null,
+    setComposer: (content: string) => void,
+    textareaRef: React.RefObject<HTMLTextAreaElement | null>
+  }) => {
+  const hasUserMessages = orderedMessages.some((msg) => msg.type !== "SYSTEM");
+
+  function getMessageDate(message?: ChatMessage) {
+    if (!message?.createdAt) return null;
+
+    const date = new Date(message.createdAt);
+    if (Number.isNaN(date.getTime())) return null;
+
+    return date;
+  }
+
+  function isSameDay(a: Date, b: Date) {
+    return (
+      a.getFullYear() === b.getFullYear() &&
+      a.getMonth() === b.getMonth() &&
+      a.getDate() === b.getDate()
+    );
+  }
+
+  function formatTimeLabel(date: Date) {
+    return date.toLocaleTimeString("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+  }
+
+  function formatDateLabel(date: Date) {
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  }
+
+  function getTimestampBadgeLabel(message: ChatMessage) {
+    const messageDate = getMessageDate(message);
+    if (!messageDate) return message.time;
+
+    const now = new Date();
+    const yesterday = new Date(now);
+    yesterday.setDate(now.getDate() - 1);
+
+    const timeLabel = formatTimeLabel(messageDate);
+
+    if (isSameDay(messageDate, now)) {
+      return `Today`;
+    }
+
+    if (isSameDay(messageDate, yesterday)) {
+      return `Yesterday`;
+    }
+
+    return `${formatDateLabel(messageDate)}`;
+  }
+
+  function getMessageTime(message: ChatMessage) {
+    const messageDate = getMessageDate(message);
+    if (!messageDate) return message.time;
+    return formatTimeLabel(messageDate);
+  }
+
+  function shouldShowTimestamp(prev?: ChatMessage, curr?: ChatMessage) {
+    if (!prev || !curr) return true;
+
+    const prevDate = getMessageDate(prev);
+    const currDate = getMessageDate(curr);
+    if (!prevDate || !currDate) return true;
+
+    if (!isSameDay(prevDate, currDate)) return true;
+
+    const diffMs = Math.abs(currDate.getTime() - prevDate.getTime());
+    return diffMs > 5 * 60 * 60 * 1000;
+  }
+
+  return (
+    <>
+      {!isLoading && (
+        <>
+          {hasUserMessages ? (
+            orderedMessages.map((item, i) => {
+              const mine = item.role === "you";
+              const prev = orderedMessages[i - 1];
+              const showTime = shouldShowTimestamp(prev, item);
+
+              return (
+                <div key={`item-${item.id}`} className="space-y-1">
+                  {showTime && (
+                    <div className="flex justify-center my-4">
+                      <Badge variant="secondary" className="rounded-sm px-3 py-1.5 text-muted-foreground text-xs">
+                        <CalendarDays className="size-3.5 inline-block mr-1.5 text-primary" />
+                        {getTimestampBadgeLabel(item)}
+                      </Badge>
+                    </div>
+                  )}
+
+                  {item.type === "SYSTEM" && (
+                    <div className="flex justify-center my-4">
+                      <span className="rounded-sm bg-muted px-4 py-2 text-xs text-muted-foreground flex items-center justify-center">
+                        <UserCircle className={cn("size-3.5 inline-block mr-2.5", item.user === user?.name ? "text-primary" : `${getColorForUser(item.userId)?.name}`)} />
+                        {item.message} at {item.time}
+                      </span>
+                    </div>
+                  )}
+
+                  {item.type !== "SYSTEM" && (
+                    <div className={`flex flex-row gap-2.5 justify-start ${mine && "flex-row-reverse"}`}>
+                      <Avatar className="mt-0.5 size-8 border rounded-sm">
+                        <AvatarFallback className={cn("text-[11px] rounded-sm", item.user === user?.name ? "text-primary" : `${getColorForUser(item.userId)?.name}`)}>
+                          {initials(item.user)}
+                        </AvatarFallback>
+                      </Avatar>
+
+                      <div
+                        className={`
+                      relative max-w-[85%] space-y-1 rounded-sm border px-3 py-2 sm:max-w-[72%]
+                      ${mine ? "border-border/80 bg-muted/60" : "bg-background/50 border-border/80"}
+                    `}
+                      >
+                        <div
+                          className={`
+                        flex items-center gap-2 text-[10px] border bg-muted-foreground/20 px-2 py-1 rounded-sm w-max mb-2.5
+                        ${mine ? "ml-auto justify-end" : ""}
+                      `}
+                        >
+                          <span className={cn(item.user === user?.name ? "text-primary" : `${getColorForUser(item.userId)?.name}`, "font-semibold leading-relaxed")}>
+                            {item.user === user?.name ? "You" : item.user}
+                          </span>
+                          <span className="text-muted-foreground">{getMessageTime(item)}</span>
+                        </div>
+
+                        <p className="text-[12px] leading-relaxed break-all whitespace-pre-wrap pr-10 mb-0">
+                          {item.message}
+                        </p>
+
+                        {mine && (
+                          <div className="absolute bottom-2.5 right-2 flex items-center text-muted-foreground/90 pointer-events-none">
+                            {isOptimisticMessageId(item.id) ? <Check className="size-3.5" /> : <CheckCheck className="size-3.5" />}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          ) : (
+            <EmptyState channel={channel} setComposer={setComposer} textareaRef={textareaRef} />
+          )}
+        </>
+      )}
+    </>
+  )
 }
