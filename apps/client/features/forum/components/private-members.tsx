@@ -2,17 +2,18 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Card } from "@/components/ui/card";
 import { useOnlineUsers } from "@/providers/online-users-providers";
+import { channels } from "../utils";
 
 
-export function MembersPanel() {
-  const { users } = useOnlineUsers();
+export function PrivateMembersPanel({ channelId }: { channelId: string }) {
+  const { privateUsers: users } = useOnlineUsers();
 
   return (
-    <Card className="h-full overflow-hidden border-border/80 bg-card/60 backdrop-blur-sm">
+    <Card className="h-full overflow-hidden border-border/80 bg-card/60 backdrop-blur-sm p-2">
       <div className="border-b p-4">
-        <p className="text-sm font-semibold tracking-wide">Room Activity</p>
+        <p className="text-sm font-semibold tracking-wide">{channels.find(c => c.id === channelId)?.name}</p>
         <p className="mt-1 text-xs text-muted-foreground">
-          Traders currently participating.
+          Members currently participating.
         </p>
       </div>
 
@@ -48,7 +49,7 @@ export function MembersPanel() {
                 </div>
 
                 <Badge className="h-5 rounded-full bg-emerald-600 px-2 text-[10px] text-white">
-                  Live
+                  Online
                 </Badge>
               </div>
             ))}

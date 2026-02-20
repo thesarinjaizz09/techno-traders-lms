@@ -9,6 +9,7 @@ import { isAuthenticated } from "@/lib/auth/utils";
 import generatePageMetadata from "@/lib/utils/seo";
 import { SocketProvider } from "@/providers/socket-provider";
 import { AuthResetProvider } from "@/providers/auth-reset-provider";
+import { OnlineUsersProvider } from "@/providers/online-users-providers";
 
 
 export const metadata = generatePageMetadata({
@@ -37,7 +38,9 @@ export default async function UserDashboardLayout({
                     <SidebarInset>
                         <AuthResetProvider>
                             <SocketProvider>
-                                {children}
+                                <OnlineUsersProvider>
+                                    {children}
+                                </OnlineUsersProvider>
                             </SocketProvider>
                         </AuthResetProvider>
                     </SidebarInset>

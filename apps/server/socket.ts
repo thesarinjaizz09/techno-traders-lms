@@ -7,13 +7,13 @@ import { createAdapter } from "@socket.io/redis-adapter";
 import { redisPub, redisSub } from "./redis";
 import { prisma } from "./prisma";
 import { z } from "zod";
-import { time } from "node:console";
+import { addUser, removeUser, getAllUsers, OnlineUser } from "./presence";
 
 type AuthenticatedUser = {
     id: string;
-    username?: string;
+    name: string;
+    isMember: boolean;
     role?: string;
-    [key: string]: unknown;
 };
 
 type SocketData = {
@@ -92,6 +92,7 @@ export async function setupSocket(httpServer: any) {
                 id: session.user.id,
                 name: session.user.name,
                 role: session.user.role,
+                isMember: session.user.isMember,
             };
 
             console.log("Socket authenticated:", socket.data.user.name || socket.data.user.id);
@@ -116,6 +117,28 @@ export async function setupSocket(httpServer: any) {
         console.log(`User connected → ${userId} (${socket.id})`);
 
         socket.join(GLOBAL_ROOM);
+
+        const payload: OnlineUser = {
+            userId: user.id,
+            name: user.name,
+            isMember: user.isMember,
+        };
+
+        addUser(payload);
+
+        socket.emit("presence:sync", getAllUsers());
+
+        if (user.isMember) {
+            socket.broadcast.to(GLOBAL_ROOM).emit("private:user:online", {
+                userId: user.id,
+                name: user.name,
+            });
+        } else {
+            socket.broadcast.to(GLOBAL_ROOM).emit("user:online", {
+                userId: user.id,
+                name: user.name,
+            });
+        }
 
         socket.on("typing:start", () => {
             console.log(`User typing:start → ${userId}`);
@@ -173,7 +196,7 @@ export async function setupSocket(httpServer: any) {
             };
 
             // console.log("Broadcasting system message:", payload);
-            io.to(GLOBAL_ROOM).emit("message:system", payload);
+            socket.broadcast.to(GLOBAL_ROOM).emit("message:system", payload);
         });
 
         socket.on("private:user:new", (event: any) => {
@@ -200,7 +223,7 @@ export async function setupSocket(httpServer: any) {
             };
 
             // console.log("Broadcasting system message:", payload);
-            io.to(GLOBAL_ROOM).emit("private:message:system", payload);
+            socket.broadcast.to(GLOBAL_ROOM).emit("private:message:system", payload);
         });
 
         // ─── Rate limiting key per user ───
@@ -347,6 +370,9 @@ export async function setupSocket(httpServer: any) {
 
         // ─── Handle disconnect ───
         socket.on("disconnect", (reason) => {
+            socket.broadcast.to(GLOBAL_ROOM).emit("user:offline", {
+                userId,
+            });
             console.log(`User disconnected → ${userId} (${reason})`);
         });
     });

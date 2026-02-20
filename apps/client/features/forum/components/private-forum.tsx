@@ -49,12 +49,12 @@ import { useSocket } from "@/providers/socket-provider";
 import { cn } from "@/lib/utils";
 import { getColorForUser } from "@/constants/chat-colors";
 import { channels, ChatMessage, IncomingSocketMessage, initials, isOptimisticMessageId, SKELETON_COUNT } from "../utils";
-import { MembersPanel } from "./members";
 import { SkeletonMessage } from "./loading";
 import { EmptyState } from "./empty";
 import { Spinner } from "@/components/ui/spinner";
 import { ChatConnectionBanner } from "./reconnect";
 import { MemberProtectionBanner } from "./member-protection";
+import { PrivateMembersPanel } from "./private-members";
 
 export default function PrivateForum() {
     const cache = usePrivateMessagesCache();
@@ -460,7 +460,7 @@ export default function PrivateForum() {
                                         <SheetTitle>Room Activity</SheetTitle>
                                     </SheetHeader>
                                     <div className="p-3">
-                                        <MembersPanel />
+                                        <PrivateMembersPanel channelId={activeChannel} />
                                     </div>
                                 </SheetContent>
                             </Sheet>
