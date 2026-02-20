@@ -5,6 +5,7 @@ import { ErrorBoundary } from "react-error-boundary"
 import { isAuthenticated } from "@/lib/auth/utils"
 import { prefetchMessages } from "@/features/forum/server/prefetch"
 import Forum from "@/features/forum/components/forum"
+import { ForumContainer } from "@/features/forum/components/container"
 
 export const metadata = generatePageMetadata({
   title: "Forum",
@@ -27,12 +28,11 @@ export default async function Page({ searchParams }: PageProps) {
 
   return (
     <HydrateClient>
-      {/* <CampaignsContainer user={session.user}> */}
-      <ErrorBoundary fallback={<div className="p-4 bg-red-100 text-red-800 rounded">Failed to load forum. Please try again later.</div>}>
-        <Forum />
-        {/* <CampaignsTable user={session.user} /> */}
-      </ErrorBoundary>
-      {/* </CampaignsContainer> */}
+      <ForumContainer>
+        <ErrorBoundary fallback={<div className="p-4 bg-red-100 text-red-800 rounded">Failed to load forum. Please try again later.</div>}>
+          <Forum />
+        </ErrorBoundary>
+      </ForumContainer>
     </HydrateClient >
   )
 }

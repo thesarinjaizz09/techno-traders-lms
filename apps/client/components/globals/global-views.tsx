@@ -234,7 +234,7 @@ export const GlobalHeader = ({
                                 <button
                                     onClick={onSecondaryNew}
                                     className={cn(`inline-flex items-center px-3 py-2 border border-transparent text-xs font-medium rounded-sm shadow-sm text-white bg-primary hover:bg-secondary hover:border-gray-700 hover:text-primary disabled:opacity-50 cursor-pointer`, disabled || isCreating ? 'cursor-not-allowed pointer-events-none opacity-50 bg-secondary' : '')}
-                                    disabled={ isSecondaryButtonDisabled || disabled || isCreating}
+                                    disabled={isSecondaryButtonDisabled || disabled || isCreating}
                                 >
                                     {
                                         isCreating ? <><Spinner className="mr-2 " /> {onCreatingText || "Creating Workflow."}</> : <>{
@@ -272,14 +272,16 @@ export const GlobalContainer = ({
     search,
     pagination,
     children,
+    className
 }: {
     header?: React.ReactNode;
     search?: React.ReactNode;
     pagination?: React.ReactNode;
     children?: React.ReactNode;
+    className?: string;
 }) => {
     return (
-        <div className="flex flex-col gap-6 bg-red border w-full h-full max-w-screen max-h-screen p-7 overflow-y-auto">
+        <div className={cn("flex flex-col gap-6 bg-red border w-full h-full max-w-screen max-h-screen p-7 overflow-y-auto", className)}>
             {header && header}
             {search && search}
             {children && children}
