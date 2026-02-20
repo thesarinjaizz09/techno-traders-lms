@@ -7,6 +7,9 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { SiteHeader } from "@/components/site-header";
 import { isAuthenticated } from "@/lib/auth/utils";
 import generatePageMetadata from "@/lib/utils/seo";
+import { SocketProvider } from "@/providers/socket-provider";
+import { AuthResetProvider } from "@/providers/auth-reset-provider";
+
 
 export const metadata = generatePageMetadata({
     title: "Dashboard",
@@ -32,7 +35,11 @@ export default async function UserDashboardLayout({
                 <div className="flex flex-1">
                     <AppSidebar name={user.name} email={user.email} />
                     <SidebarInset>
-                        {children}
+                        <AuthResetProvider>
+                            <SocketProvider>
+                                {children}
+                            </SocketProvider>
+                        </AuthResetProvider>
                     </SidebarInset>
                 </div>
             </SidebarProvider>

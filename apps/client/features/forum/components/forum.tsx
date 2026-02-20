@@ -593,9 +593,6 @@ export default function Forum() {
     });
   };
 
-  // Filter system messages
-  const systemMessages = orderedMessages.filter((msg) => msg.type === "SYSTEM");
-
   // Check if any real user message exists
   const hasUserMessages = orderedMessages.some((msg) => msg.type !== "SYSTEM");
 

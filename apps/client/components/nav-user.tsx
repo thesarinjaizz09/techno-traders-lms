@@ -70,9 +70,7 @@ const LogoutDialog = ({
     <BackdropDialog open={open} onOpenChange={onOpenChange}>
       <DialogHeader className="border-b pb-4">
         <DialogTitle className="text-lg font-semibold text-center flex items-center justify-start gap-x-2">
-          {
-            loading ? <Spinner /> : <LogOut className="size-3.5" />
-          }
+          <LogOut className="size-3.5" />
           {
             loading ? "Logging out..." : "Log Out"
           }

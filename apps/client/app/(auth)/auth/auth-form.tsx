@@ -26,8 +26,6 @@ import { AuthValues, AuthSchema } from "./validate";
 import { Mail, Lock, LayoutDashboard, EyeOff, Eye } from "lucide-react"
 import { signIn } from "@/lib/auth/client";
 import { Spinner } from "@/components/ui/spinner";
-import { useSocket } from "@/providers/socket-provider";
-import { useCreateSystemMessage } from "@/features/users/hooks/use-users";
 
 export function AuthForm({
   className,

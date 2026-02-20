@@ -5,6 +5,8 @@ import Link from "next/link";
 import VideoComponent from "./video-component";
 import { cn } from "@/lib/utils";
 import { openSans } from "@/fonts";
+import { SocketProvider } from "@/providers/socket-provider";
+import { AuthResetProvider } from "@/providers/auth-reset-provider";
 
 const AuthLayout = async ({
   children,
@@ -39,7 +41,11 @@ const AuthLayout = async ({
           <div className="w-full">
             <div className="flex flex-1 items-center justify-center">
               <div className="w-full max-w-[380px]">
-                {children}
+                <AuthResetProvider>
+                  <SocketProvider>
+                    {children}
+                  </SocketProvider>
+                </AuthResetProvider>
               </div>
             </div>
           </div>

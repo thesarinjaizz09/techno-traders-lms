@@ -4,6 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signOut } from "@/lib/auth/client";
 import { toast } from "sonner";
+import { useAuthReset } from "@/providers/auth-reset-provider";
+import { queryClient } from "@/lib/query";
+import { destroySocket } from "@/lib/socket";
 
 /**
  * Deep client cleanup:
@@ -70,6 +73,7 @@ async function clearServerCookies() {
 
 export function useLogout() {
   const router = useRouter();
+  const { reset } = useAuthReset();
   const [loading, setLoading] = useState(false);
 
   const logout = async () => {
@@ -92,6 +96,10 @@ export function useLogout() {
 
       // Full deep cleanup
       await deepClientCleanup();
+
+      queryClient.clear();
+      destroySocket();
+      reset();
 
       toast.success("Logged out successfully!");
 

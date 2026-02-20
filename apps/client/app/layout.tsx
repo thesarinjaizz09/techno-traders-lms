@@ -38,9 +38,7 @@ export default function RootLayout({
         <TRPCReactProvider>
           <NuqsAdapter>
             <Provider>
-              <SocketProvider>
-                <TooltipProvider>{children}</TooltipProvider>
-              </SocketProvider>
+              <TooltipProvider>{children}</TooltipProvider>
               <Toaster richColors />
             </Provider>
           </NuqsAdapter>
