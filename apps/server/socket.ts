@@ -141,7 +141,7 @@ export async function setupSocket(httpServer: any) {
         }
 
         socket.on("typing:start", () => {
-            console.log(`User typing:start → ${userId}`);
+            // console.log(`User typing:start → ${userId}`);
             socket.broadcast.to(GLOBAL_ROOM).emit("typing:start", {
                 userId: user.id,
                 name: user.name,
@@ -149,7 +149,7 @@ export async function setupSocket(httpServer: any) {
         });
 
         socket.on("typing:stop", () => {
-            console.log(`User typing:stop → ${userId}`);
+            // console.log(`User typing:stop → ${userId}`);
             socket.broadcast.to(GLOBAL_ROOM).emit("typing:stop", {
                 userId: user.id,
                 name: user.name,
@@ -157,7 +157,7 @@ export async function setupSocket(httpServer: any) {
         });
 
         socket.on("private:typing:start", () => {
-            console.log(`User private:typing:start → ${userId}`);
+            // console.log(`User private:typing:start → ${userId}`);
             socket.broadcast.to(GLOBAL_ROOM).emit("private:typing:start", {
                 userId: user.id,
                 name: user.name,
@@ -165,7 +165,7 @@ export async function setupSocket(httpServer: any) {
         });
 
         socket.on("private:typing:stop", () => {
-            console.log(`User private:typing:stop → ${userId}`);
+            // console.log(`User private:typing:stop → ${userId}`);
             socket.broadcast.to(GLOBAL_ROOM).emit("private:typing:stop", {
                 userId: user.id,
                 name: user.name,
@@ -300,6 +300,7 @@ export async function setupSocket(httpServer: any) {
         });
 
         socket.on("private:message:send", async (payload: unknown) => {
+            console.log("Received private:message:send event with payload:", payload);
             // 1. Validate input
             const schema = z.object({
                 content: z.string().min(1).max(2000).trim(),

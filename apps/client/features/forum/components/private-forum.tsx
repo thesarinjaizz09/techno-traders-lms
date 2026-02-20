@@ -165,6 +165,7 @@ export default function PrivateForum() {
         if (!socket) return;
 
         const onMessageNew = (message: IncomingSocketMessage) => {
+            console.log("New private message received:", message);
             const el = messagesContainerRef.current;
             const userAtBottom = el ? isNearBottom(el) : true;
             let shouldShowNewMessageIndicator = false;
@@ -758,7 +759,7 @@ const MessageBubble = ({
                             const showTime = shouldShowTimestamp(prev, item);
 
                             return (
-                                <div key={`item-${item.id}`} className="space-y-1">
+                                <div key={`item-${item.id}-${i}-${item.createdAt}-${Math.random()}`} className="space-y-1">
                                     {showTime && (
                                         <div className="flex justify-center my-4">
                                             <Badge variant="secondary" className="rounded-sm px-3 py-1.5 text-muted-foreground text-xs">
