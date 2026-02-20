@@ -6,12 +6,13 @@ import { useBecomeMember } from "@/features/users/hooks/use-users";
 import { Spinner } from "@/components/ui/spinner";
 import { useSocket } from "@/providers/socket-provider";
 
-export function MemberProtectionBanner() {
+export function MemberProtectionBanner({ user }: { user: { isMember: boolean } }) {
     const { socket } = useSocket();
     const { mutate: becomeMember, isPending } = useBecomeMember();
 
     const registerMember = () => {
         if (isPending) return;
+        if (user.isMember) return;
 
         becomeMember(
             undefined,

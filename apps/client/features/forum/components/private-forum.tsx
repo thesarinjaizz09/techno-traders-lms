@@ -412,7 +412,7 @@ export default function PrivateForum() {
 
             <ChatConnectionBanner />
 
-            {user && !user.isMember && <MemberProtectionBanner />}
+            {user && !user.isMember && <MemberProtectionBanner user={{ isMember: user.isMember }} />}
 
             <div className="grid h-full grid-cols-1">
                 <Card className="relative flex h-full min-h-[70vh] flex-col gap-0 overflow-hidden border-border/80 bg-card/70 py-0 backdrop-blur-md rounded-sm">
