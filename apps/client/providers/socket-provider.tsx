@@ -10,12 +10,14 @@ type SocketContextValue = {
   socket: Socket | null;
   connected: boolean;
   isConnecting: boolean;
+  reconnect: () => void;
 };
 
 const SocketContext = createContext<SocketContextValue>({
   socket: null,
   connected: false,
   isConnecting: false,
+  reconnect: () => {},
 });
 
 export function SocketProvider({ children }: { children: React.ReactNode }) {
@@ -27,26 +29,28 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
   const [connected, setConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
 
-  useEffect(() => {
-    // 🔥 HARD RESET on auth change / logout
+  const teardown = () => {
     if (socketRef.current) {
       socketRef.current.removeAllListeners();
       socketRef.current.disconnect();
       destroySocket();
       socketRef.current = null;
     }
-
     setConnected(false);
     setIsConnecting(false);
+  };
 
-    if (isLoading || !user) return;
+  const connect = () => {
+    if (!user) return;
+
+    teardown();
+    setIsConnecting(true);
 
     const socket = createSocket({
       token: user.sessions?.[0]?.token,
     });
 
     socketRef.current = socket;
-    setIsConnecting(true);
 
     socket.connect();
 
@@ -59,7 +63,6 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     socket.on("disconnect", () => {
       console.log("❌ Socket disconnected");
       setConnected(false);
-      setIsConnecting(false);
     });
 
     socket.on("connect_error", (err) => {
@@ -67,15 +70,17 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       setConnected(false);
       setIsConnecting(false);
     });
+  };
 
-    return () => {
-      socket.removeAllListeners();
-      socket.disconnect();
-      destroySocket();
-      socketRef.current = null;
-      setConnected(false);
-      setIsConnecting(false);
-    };
+  useEffect(() => {
+    // HARD RESET on auth change
+    teardown();
+
+    if (isLoading || !user) return;
+
+    connect();
+
+    return teardown;
   }, [user, isLoading, version]);
 
   return (
@@ -84,6 +89,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
         socket: socketRef.current,
         connected,
         isConnecting,
+        reconnect: connect,
       }}
     >
       {children}

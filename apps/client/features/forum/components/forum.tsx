@@ -53,6 +53,7 @@ import { MembersPanel } from "./members";
 import { SkeletonMessage } from "./loading";
 import { EmptyState } from "./empty";
 import { Spinner } from "@/components/ui/spinner";
+import { ChatConnectionBanner } from "./reconnect";
 
 export default function Forum() {
   const cache = useMessagesCache();
@@ -405,8 +406,10 @@ export default function Forum() {
   };
 
   return (
-    <div className={`${openSans.className} relative h-full p-1 sm:p-4 md:px-1.5 md:py-2`}>
+    <div className={`${openSans.className} relative h-full p-1 sm:p-4 md:px-1.5 md:py-2 gap-2 flex flex-col`}>
       <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,oklch(0.72_0.17_293/.12),transparent_42%),radial-gradient(circle_at_bottom_right,oklch(0.71_0.2_160/.08),transparent_40%)]" />
+
+      <ChatConnectionBanner />
 
       <div className="grid h-full grid-cols-1">
         <Card className="relative flex h-full min-h-[70vh] flex-col gap-0 overflow-hidden border-border/80 bg-card/70 py-0 backdrop-blur-md rounded-sm">
