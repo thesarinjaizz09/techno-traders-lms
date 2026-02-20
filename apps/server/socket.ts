@@ -117,9 +117,6 @@ export async function setupSocket(httpServer: any) {
 
         socket.join(GLOBAL_ROOM);
 
-        // Optional: broadcast user joined event
-        // io.to(GLOBAL_ROOM).emit("user:joined", { id: userId, username: user.username });
-
         socket.on("typing:start", () => {
             console.log(`User typing:start → ${userId}`);
             socket.broadcast.to(GLOBAL_ROOM).emit("typing:start", {
@@ -131,6 +128,22 @@ export async function setupSocket(httpServer: any) {
         socket.on("typing:stop", () => {
             console.log(`User typing:stop → ${userId}`);
             socket.broadcast.to(GLOBAL_ROOM).emit("typing:stop", {
+                userId: user.id,
+                name: user.name,
+            });
+        });
+
+        socket.on("private:typing:start", () => {
+            console.log(`User private:typing:start → ${userId}`);
+            socket.broadcast.to(GLOBAL_ROOM).emit("private:typing:start", {
+                userId: user.id,
+                name: user.name,
+            });
+        });
+
+        socket.on("private:typing:stop", () => {
+            console.log(`User private:typing:stop → ${userId}`);
+            socket.broadcast.to(GLOBAL_ROOM).emit("private:typing:stop", {
                 userId: user.id,
                 name: user.name,
             });
@@ -163,8 +176,36 @@ export async function setupSocket(httpServer: any) {
             io.to(GLOBAL_ROOM).emit("message:system", payload);
         });
 
+        socket.on("private:user:new", (event: any) => {
+            const sys = event.message; // 👈 THIS IS THE FIX
+
+            if (!sys) {
+                console.error("SYSTEM message missing payload");
+                return;
+            }
+
+            const payload = {
+                id: sys.id,
+                type: "SYSTEM",
+                message: sys.content,
+                createdAt: sys.createdAt,
+                user: user?.name || "System",
+                role: "system",
+                time: new Date(sys.createdAt).toLocaleTimeString("en-IN", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    hour12: true,
+                }),
+                userId: sys.userId,
+            };
+
+            // console.log("Broadcasting system message:", payload);
+            io.to(GLOBAL_ROOM).emit("private:message:system", payload);
+        });
+
         // ─── Rate limiting key per user ───
         const rateKey = `chat:rate:${userId}`;
+        const privateRateKey = `chat:private:rate:${userId}`;
 
         socket.on("message:send", async (payload: unknown) => {
             // 1. Validate input
@@ -232,6 +273,75 @@ export async function setupSocket(httpServer: any) {
             } catch (err) {
                 console.error("Failed to process message:", err);
                 socket.emit("message:error", { message: "Failed to send message" });
+            }
+        });
+
+        socket.on("private:message:send", async (payload: unknown) => {
+            // 1. Validate input
+            const schema = z.object({
+                content: z.string().min(1).max(2000).trim(),
+                clientMessageId: z.string().optional(), // for optimistic updates
+            });
+
+            const result = schema.safeParse(payload);
+            if (!result.success) {
+                socket.emit("message:error", { message: "Invalid message", errors: result.error });
+                return;
+            }
+
+            const { content, clientMessageId } = result.data;
+
+            // 2. Basic rate limit (using redisPub)
+            try {
+                const current = await redisPub.incr(privateRateKey);
+                if (current === 1) {
+                    await redisPub.expire(privateRateKey, RATE_LIMIT_WINDOW_SEC);
+                }
+                if (current > MESSAGE_RATE_LIMIT) {
+                    socket.emit("private:message:error", { message: "Rate limit exceeded. Slow down." });
+                    return;
+                }
+
+                // 3. Persist message **first**
+                const message = await prisma.privateMessage.create({
+                    data: {
+                        content,
+                        userId: user.id,
+                    },
+                    include: {
+                        user: {
+                            select: {
+                                id: true,
+                                name: true,
+                            },
+                        },
+                    },
+                });
+
+                const payload = {
+                    id: message.id,
+                    userId: message.user.id,
+                    clientMessageId, // echo back for optimistic update correlation
+                    user: message.user.name,
+                    role: "member", // client decides "you"
+                    message: message.content,
+                    createdAt: message.createdAt.toISOString(),
+                    time: message.createdAt.toLocaleTimeString("en-IN", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        hour12: true,
+                    }),
+                };
+
+                // 4. Broadcast via Socket.IO → Redis adapter handles propagation
+                socket.broadcast.to(GLOBAL_ROOM).emit("private:typing:stop", {
+                    userId: user.id,
+                    name: user.name,
+                });
+                io.to(GLOBAL_ROOM).emit("private:message:new", payload);
+            } catch (err) {
+                console.error("Failed to process private message:", err);
+                socket.emit("private:message:error", { message: "Failed to send message" });
             }
         });
 

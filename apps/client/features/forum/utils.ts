@@ -33,6 +33,12 @@ export const channels: Channel[] = [
         name: "Traders Community",
         description: "Live market talk, setups, and execution updates.",
         unread: 8,
+    },
+    {
+        id: "private-community",
+        name: "Private Community",
+        description: "Exclusive live market talk, setups, and execution updates.",
+        unread: 8,
     }
 ];
 

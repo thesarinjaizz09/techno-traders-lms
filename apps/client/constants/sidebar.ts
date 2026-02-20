@@ -55,6 +55,10 @@ export const SIDEBAR_MAIN_NAVIGATION = [
         title: "Global",
         url: "/forum",
       },
+      {
+        title: "Private",
+        url: "/private",
+      },
     ],
   },
 

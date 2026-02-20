@@ -34,6 +34,9 @@ model User {
 
   messages     Message[]
   messageReads MessageRead[]
+  privateMessages PrivateMessage[]
+
+  isMember Boolean @default(false)
 
   @@unique([email])
   @@map("user")
@@ -85,6 +88,17 @@ model Verification {
 }
 
 model Message {
+  id        String   @id @default(uuid())
+  content   String
+  userId    String
+  createdAt DateTime @default(now())
+
+  type MessageType @default(USER)
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model PrivateMessage {
   id        String   @id @default(uuid())
   content   String
   userId    String

@@ -34,17 +34,16 @@ export function useCurrentUser(): UseCurrentUserResult {
   const queryKey = trpc.users.getCurrent.queryKey();
 
   const query = useQuery({
-    ...trpc.users.getCurrent.queryOptions(undefined, {
-      staleTime: 10 * 60_000, // 10 minutes
-      gcTime: 60 * 60_000, // 1 hour
+    ...trpc.users.getCurrent.queryOptions(),
+    staleTime: 10 * 60_000, // 10 minutes
+    gcTime: 60 * 60_000, // 1 hour
 
-      refetchOnWindowFocus: false,
+    refetchOnWindowFocus: false,
 
-      // Keep previous data while fetching new one (smooth UX)
-      placeholderData: (prev) => prev,
+    // Keep previous data while fetching new one (smooth UX)
+    placeholderData: (prev) => prev,
 
-      // enabled: !!session?.user, (session context)
-    }),
+    // enabled: !!session?.user, (session context)
   });
 
   // Optional: helper flags for UI
@@ -75,6 +74,22 @@ export function useCreateSystemMessage() {
   const queryClient = useQueryClient();
 
   return useMutation(
-    trpc.users.createSystemMessage.mutationOptions({}),
+    trpc.users.createSystemMessage.mutationOptions(),
+  );
+}
+
+export function useBecomeMember() {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+
+  return useMutation(
+    trpc.users.becomeMember.mutationOptions({
+      onSuccess() {
+        // Invalidate current user to refresh membership status
+        queryClient.invalidateQueries({
+          queryKey: trpc.users.getCurrent.queryKey(),
+        });
+      }
+    }),
   );
 }

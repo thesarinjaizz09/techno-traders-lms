@@ -13,6 +13,7 @@ const CURRENT_USER_SELECT = {
   role: true,
   createdAt: true,
   updatedAt: true,
+  isMember: true,
 } as const;
 
 // ────────────────────────────────────────────────
@@ -120,6 +121,54 @@ export const usersRouter = createTRPCRouter({
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
         message: "Failed to create system message",
+      });
+    }
+  }),
+
+  becomeMember: protectedProcedure.mutation(async ({ ctx }) => {
+    const userId = ctx.session.user.id;
+
+    const log = logger.child({
+      component: "usersRouter",
+      operation: "becomeMember",
+      userId,
+    });
+
+    log.debug("Making user a member");
+
+    try {
+      const result = await prisma.$transaction(async (tx) => {
+        // 1️⃣ Update user → member
+        const user = await tx.user.update({
+          where: { id: userId },
+          data: {
+            isMember: true,
+          },
+        });
+
+        // 2️⃣ Create system message
+        const message = await tx.privateMessage.create({
+          data: {
+            userId: user.id, // cleaner than connect
+            type: "SYSTEM",
+            content: `${user.name} joined the exclusive community`,
+          },
+        });
+
+        return message;
+      });
+
+      log.info("User made a member successfully");
+      return result;
+
+    } catch (err) {
+      if (err instanceof TRPCError) throw err;
+
+      log.error({ err }, "Failed to make user a member");
+
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Failed to make user a member",
       });
     }
   })
