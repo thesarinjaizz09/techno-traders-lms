@@ -11,16 +11,14 @@ import { SocketProvider } from "@/providers/socket-provider";
 import { AuthResetProvider } from "@/providers/auth-reset-provider";
 import { OnlineUsersProvider } from "@/providers/online-users-providers";
 
-
 export const metadata = generatePageMetadata({
     title: "Dashboard",
     description:
-        "Your Synapse dashboard gives you a unified overview of your agentic workflows, executions, analytics, and system activity. Monitor, manage, and orchestrate intelligent agents with real-time insights and enterprise-grade reliability.",
+        "Your personalized dashboard to track activity, manage discussions, monitor engagement, and stay updated with everything happening across your community.",
     image: "/og-dashboard.jpg",
-    url: "/boards",
+    url: "/dashboard",
     schemaType: "WebPage",
 });
-
 
 export default async function UserDashboardLayout({
     children,

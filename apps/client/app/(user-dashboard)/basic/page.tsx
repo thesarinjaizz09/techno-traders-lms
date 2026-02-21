@@ -9,14 +9,13 @@ import { ForumContainer } from "@/features/forum/components/container"
 import { ForumError } from "@/features/forum/components/error"
 
 export const metadata = generatePageMetadata({
-  title: "Forum",
+  title: "Basic Community",
   description:
-    "Create, schedule, and manage email campaigns with full control over recipients, templates, sending limits, and delivery performance. Track real-time progress, failures, and outcomes across campaigns in a unified PostDepot workspace.",
-  image: "/og-campaigns.jpg",
-  url: "/campaigns",
+    "Join the public community to ask questions, share insights, and participate in real-time discussions with members across the community.",
+  image: "/og-forum.jpg",
+  url: "/forum",
   schemaType: "WebPage",
 });
-
 
 type PageProps = {
   searchParams: Promise<SearchParams>

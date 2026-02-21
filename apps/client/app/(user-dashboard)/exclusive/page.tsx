@@ -9,14 +9,13 @@ import { ForumError } from "@/features/forum/components/error"
 import PrivateForum from "@/features/forum/components/private-forum"
 
 export const metadata = generatePageMetadata({
-  title: "Private Forum",
+  title: "Exclusive Community",
   description:
-    "Create, schedule, and manage email campaigns with full control over recipients, templates, sending limits, and delivery performance. Track real-time progress, failures, and outcomes across campaigns in a unified PostDepot workspace.",
-  image: "/og-campaigns.jpg",
-  url: "/campaigns",
+    "Access the members-only community for private discussions, premium insights, and deeper conversations reserved for exclusive community members.",
+  image: "/og-private-forum.jpg",
+  url: "/private-forum",
   schemaType: "WebPage",
 });
-
 
 type PageProps = {
   searchParams: Promise<SearchParams>
