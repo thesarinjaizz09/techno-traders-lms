@@ -261,7 +261,7 @@ export const messagesRouter = createTRPCRouter({
       // ─── Transform response (sanitize & format) ───
       const items = messages.map((m) => ({
         name: m.name ?? "Anonymous", // Fallback for null names
-        role: m.role
+        role: m.role === "USER" ? "Member" : m.role // Map USER role to Member for frontend
       }));
 
       // ─── Logging: End of query (metrics) ───
@@ -338,7 +338,7 @@ export const messagesRouter = createTRPCRouter({
       // ─── Transform response (sanitize & format) ───
       const items = messages.map((m) => ({
         name: m.name ?? "Anonymous", // Fallback for null names
-        role: m.role
+        role: m.role === "USER" ? "Member" : m.role // Map USER role to Member for frontend
       }));
 
       // ─── Logging: End of query (metrics) ───
