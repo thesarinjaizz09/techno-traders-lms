@@ -1,22 +1,20 @@
 import { CreateForm } from "@/app/(auth)/create/create-form"
-import { getSession } from "@/lib/auth/utils";
+import { isNotAuthenticated } from "@/lib/auth/utils";
 import generatePageMetadata from "@/lib/utils/seo";
-import { redirect } from "next/navigation";
 
 export const metadata = generatePageMetadata({
   title: "Create Credentials",
   description:
-    "Create your secure PostDepot credentials to start sending high-volume transactional emails with enterprise-grade deliverability, queue-based dispatching, and SMTP reputation protection.",
+    "Create your secure Techno Traders credentials to access real-time trading discussions, exclusive market insights, and a high-performance community built for serious traders.",
   image: "/og-auth.jpg",
   url: "/create",
   schemaType: "WebPage",
 });
 
 
-export default async function SignupPage() {
-  const session = await getSession();
 
-  if (session) redirect(process.env.NEXT_PUBLIC_AUTH_SUCCESS_REDIRECT_URL || "/boards");
+export default async function SignupPage() {
+  await isNotAuthenticated();
 
   return <CreateForm />
 }
