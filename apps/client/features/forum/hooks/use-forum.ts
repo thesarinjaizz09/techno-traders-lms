@@ -17,6 +17,8 @@ type RouterOutput = inferRouterOutputs<AppRouter>;
 type MessagesInfinite = RouterOutput["messages"]["getInfinite"];
 type PrivateMessagesInfinite = RouterOutput["messages"]["getPrivateInfinite"];
 
+type MembersInfinite = RouterOutput["messages"]["getInfiniteMembers"];
+type PrivateMembersInfinite = RouterOutput["messages"]["getPrivateInfiniteMembers"];
 // Common query options – centralize to avoid duplication & bugs
 const MESSAGES_QUERY_LIMIT = 12;
 const MESSAGES_QUERY_KEY = { limit: MESSAGES_QUERY_LIMIT } as const;
@@ -188,7 +190,6 @@ export function useMessagesCache() {
 
 
 
-
 // ────────────────────────────────────────────────
 // Main hook – fetches paginated messages
 // ────────────────────────────────────────────────
@@ -319,4 +320,65 @@ export function usePrivateMessagesCache() {
             );
         }
     };
+}
+
+
+export function useMembers() {
+    const trpc = useTRPC();
+
+    return useInfiniteQuery({
+        ...trpc.messages.getInfiniteMembers.infiniteQueryOptions(MESSAGES_QUERY_KEY, {
+            // Cursor-based pagination
+            getNextPageParam: (lastPage: MembersInfinite) => {
+                // Offset-based: continue if nextCursor exists and is a valid number
+                if (lastPage.nextCursor !== null && typeof lastPage.nextCursor === 'number' && lastPage.nextCursor > 0) {
+                    return lastPage.nextCursor;
+                }
+                return undefined;
+            },
+
+            // Chat-friendly defaults
+            staleTime: 30_000,           // 30 seconds – messages rarely change retroactively
+            gcTime: 5 * 60_000,          // 5 minutes – keep in cache longer than stale
+            refetchOnWindowFocus: false, // don't spam server when user tabs back
+            refetchOnReconnect: "always",   // same
+            refetchOnMount: "always",       // avoid unnecessary fetches on remount
+
+            // Optional: placeholder data for better UX (last known page if available)
+            placeholderData: (previousData: InfiniteData<MembersInfinite, number | null> | undefined) => previousData,
+
+            // Optional: keepPreviousData if switching filters/views later
+            //   keepPreviousData: true,
+        }),
+    });
+}
+
+export function usePrivateMembers() {
+    const trpc = useTRPC();
+
+    return useInfiniteQuery({
+        ...trpc.messages.getPrivateInfiniteMembers.infiniteQueryOptions(MESSAGES_QUERY_KEY, {
+            // Cursor-based pagination
+            getNextPageParam: (lastPage: PrivateMembersInfinite) => {
+                // Offset-based: continue if nextCursor exists and is a valid number
+                if (lastPage.nextCursor !== null && typeof lastPage.nextCursor === 'number' && lastPage.nextCursor > 0) {
+                    return lastPage.nextCursor;
+                }
+                return undefined;
+            },
+
+            // Chat-friendly defaults
+            staleTime: 30_000,           // 30 seconds – messages rarely change retroactively
+            gcTime: 5 * 60_000,          // 5 minutes – keep in cache longer than stale
+            refetchOnWindowFocus: false, // don't spam server when user tabs back
+            refetchOnReconnect: "always",   // same
+            refetchOnMount: "always",       // avoid unnecessary fetches on remount
+
+            // Optional: placeholder data for better UX (last known page if available)
+            placeholderData: (previousData: InfiniteData<PrivateMembersInfinite, number | null> | undefined) => previousData,
+
+            // Optional: keepPreviousData if switching filters/views later
+            //   keepPreviousData: true,
+        }),
+    });
 }

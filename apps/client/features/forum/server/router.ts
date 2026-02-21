@@ -17,6 +17,9 @@ const getInfiniteInput = z.object({
 // Production-grade router
 // ────────────────────────────────────────────────
 export const messagesRouter = createTRPCRouter({
+  // ────────────────────────────────────────────────
+  // Messages
+  // ────────────────────────────────────────────────
   getInfinite: protectedProcedure
     .input(getInfiniteInput)
     .query(async ({ ctx, input }) => {
@@ -202,4 +205,158 @@ export const messagesRouter = createTRPCRouter({
         nextCursor
       };
     }),
+
+  // ────────────────────────────────────────────────
+  // Members
+  // ────────────────────────────────────────────────
+  getInfiniteMembers: protectedProcedure
+    .input(getInfiniteInput)
+    .query(async ({ ctx, input }) => {
+      const { limit } = input;
+      const offset = input.cursor ?? 0;
+      const userId = ctx.session.user.id;
+
+      // ─── Logging: Start of query ───
+      const queryStart = Date.now();
+      const queryLogger = logger.child({
+        userId,
+        operation: "getInfiniteMembers",
+        limit,
+        offset, // ← Log offset instead of cursor
+      });
+      queryLogger.debug("Fetching members");
+
+      let messages;
+      try {
+        messages = await prisma.user.findMany({
+          take: limit + 1, // +1 for next offset detection
+          skip: offset, // ← Use skip for offset-based pagination
+          orderBy: { createdAt: "desc" }, // Keep desc (newest first)
+        });
+        // queryLogger.debug({ totalInDB: await prisma.message.count(), fetched: messages.length });
+      } catch (err) {
+        queryLogger.error({ err }, "Database query failed");
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch members",
+        });
+      }
+
+      // ─── Validate offset if provided (edge case: offset too high → empty) ───
+      if (offset > 0 && messages.length === 0) {
+        queryLogger.warn({ offset }, "Offset returned no results – possible exhausted or invalid");
+        // Don't throw; just return empty list (graceful degradation)
+      }
+
+      // ─── Pagination logic (offset-based) ───
+      let nextCursor: number | null = null; // ← Type as number (offset)
+      if (messages.length > limit) {
+        messages.pop(); // Remove the extra for items
+        nextCursor = offset + limit; // Simple arithmetic for next offset
+        queryLogger.debug({ nextCursor }, "Next offset computed");
+      } else {
+        nextCursor = null; // No more messages
+      }
+
+      // ─── Transform response (sanitize & format) ───
+      const items = messages.map((m) => ({
+        name: m.name ?? "Anonymous", // Fallback for null names
+        role: m.role
+      }));
+
+      // ─── Logging: End of query (metrics) ───
+      const queryDuration = Date.now() - queryStart;
+      queryLogger.info({
+        itemsCount: items.length,
+        nextCursor: !!nextCursor,
+        durationMs: queryDuration,
+      }, "Members fetched successfully");
+
+      // Optional: If queryDuration > threshold, alert (e.g., via Sentry)
+      if (queryDuration > 500) {
+        queryLogger.warn({ queryDuration }, "Slow query detected");
+      }
+
+      return {
+        items,
+        nextCursor
+      };
+    }),
+
+  getPrivateInfiniteMembers: protectedProcedure
+    .input(getInfiniteInput)
+    .query(async ({ ctx, input }) => {
+      const { limit } = input;
+      const offset = input.cursor ?? 0;
+      const userId = ctx.session.user.id;
+
+      // ─── Logging: Start of query ───
+      const queryStart = Date.now();
+      const queryLogger = logger.child({
+        userId,
+        operation: "getInfiniteMembers",
+        limit,
+        offset, // ← Log offset instead of cursor
+      });
+      queryLogger.debug("Fetching members");
+
+      let messages;
+      try {
+        messages = await prisma.user.findMany({
+          where: {
+            isMember: true,
+          },
+          take: limit + 1, // +1 for next offset detection
+          skip: offset, // ← Use skip for offset-based pagination
+          orderBy: { createdAt: "desc" }, // Keep desc (newest first)
+        });
+        // queryLogger.debug({ totalInDB: await prisma.message.count(), fetched: messages.length });
+      } catch (err) {
+        queryLogger.error({ err }, "Database query failed");
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch members",
+        });
+      }
+
+      // ─── Validate offset if provided (edge case: offset too high → empty) ───
+      if (offset > 0 && messages.length === 0) {
+        queryLogger.warn({ offset }, "Offset returned no results – possible exhausted or invalid");
+        // Don't throw; just return empty list (graceful degradation)
+      }
+
+      // ─── Pagination logic (offset-based) ───
+      let nextCursor: number | null = null; // ← Type as number (offset)
+      if (messages.length > limit) {
+        messages.pop(); // Remove the extra for items
+        nextCursor = offset + limit; // Simple arithmetic for next offset
+        queryLogger.debug({ nextCursor }, "Next offset computed");
+      } else {
+        nextCursor = null; // No more messages
+      }
+
+      // ─── Transform response (sanitize & format) ───
+      const items = messages.map((m) => ({
+        name: m.name ?? "Anonymous", // Fallback for null names
+        role: m.role
+      }));
+
+      // ─── Logging: End of query (metrics) ───
+      const queryDuration = Date.now() - queryStart;
+      queryLogger.info({
+        itemsCount: items.length,
+        nextCursor: !!nextCursor,
+        durationMs: queryDuration,
+      }, "Members fetched successfully");
+
+      // Optional: If queryDuration > threshold, alert (e.g., via Sentry)
+      if (queryDuration > 500) {
+        queryLogger.warn({ queryDuration }, "Slow query detected");
+      }
+
+      return {
+        items,
+        nextCursor
+      };
+    })
 });

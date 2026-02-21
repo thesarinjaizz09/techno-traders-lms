@@ -9,7 +9,7 @@ export function MembersPanel({ channelId }: { channelId: string }) {
   const { users } = useOnlineUsers();
 
   return (
-    <Card className="h-full overflow-hidden border-border/80 bg-card/60 backdrop-blur-sm">
+    <Card className="h-full overflow-hidden border-border/80 bg-card/60 backdrop-blur-sm p-2 gap-3">
       <div className="border-b p-4">
         <p className="text-sm font-semibold tracking-wide">{channels.find(c => c.id === channelId)?.name}</p>
         <p className="mt-1 text-xs text-muted-foreground">
@@ -20,12 +20,18 @@ export function MembersPanel({ channelId }: { channelId: string }) {
       <div className="space-y-3 p-3">
         <div className="rounded-md border bg-background/50 p-3">
           <div className="flex items-center justify-between text-xs">
-            <span className="text-muted-foreground">Online now</span>
+            <span className="text-muted-foreground">Total members</span>
+            <Badge variant="secondary">{users.length}</Badge>
+          </div>
+        </div>
+        <div className="rounded-md border bg-background/50 p-3">
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-muted-foreground">Online members</span>
             <Badge variant="secondary">{users.length}</Badge>
           </div>
         </div>
 
-        <Separator />
+        <Separator className="w-full" />
 
         {users.length === 0 ? (
           <p className="text-center text-xs text-muted-foreground py-4">
