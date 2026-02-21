@@ -464,7 +464,7 @@ export default function Forum() {
             </div>
           </div>
 
-          <div ref={messagesContainerRef} onScroll={onScroll} className={cn("flex-1 space-y-1.5 overflow-y-auto p-3 sm:p-4 max-h-[76.5vh] scrollbar-thin scrollbar-thumb-rounded-sm scrollbar-thumb-muted/50", isLoading && "pointer-events-none", connected ? "" : "max-h-[68vh]")}>
+          <div ref={messagesContainerRef} onScroll={onScroll} className={cn("flex-1 space-y-1.5 overflow-y-auto p-3 sm:p-4 max-h-[76.3vh] scrollbar-thin scrollbar-thumb-rounded-sm scrollbar-thumb-muted/50", isLoading && "pointer-events-none", connected ? "" : "max-h-[68vh]")}>
             {isFetchingNextPage && (
               <div className="flex justify-center py-2">
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
