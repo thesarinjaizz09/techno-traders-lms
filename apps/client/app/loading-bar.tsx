@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import NProgress from "nprogress";
 import "nprogress/nprogress.css";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 
 // Configure globally
 NProgress.configure({
@@ -16,7 +16,7 @@ NProgress.configure({
 
 export default function LoadingBar() {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     const originalPushState = history.pushState.bind(history);
@@ -24,15 +24,20 @@ export default function LoadingBar() {
 
     const start = () => NProgress.start();
     const done = () => NProgress.done();
+    const syncSearch = () => setSearch(window.location.search);
     const handlePopState = () => {
       start();
+      syncSearch();
       setTimeout(done, 200);
     };
+
+    syncSearch();
 
     // Patch pushState
     history.pushState = function (...args: Parameters<History["pushState"]>) {
       start();
       originalPushState(...args);
+      syncSearch();
       setTimeout(done, 200);
     };
 
@@ -40,6 +45,7 @@ export default function LoadingBar() {
     history.replaceState = function (...args: Parameters<History["replaceState"]>) {
       start();
       originalReplaceState(...args);
+      syncSearch();
       setTimeout(done, 200);
     };
 
@@ -56,11 +62,11 @@ export default function LoadingBar() {
     };
   }, []);
 
-  // Fallback: detect route changes via pathname/searchParams
+  // Fallback: detect route/search changes
   useEffect(() => {
-    // This catches when route actually changes
+    // This catches when route or query string actually changes
     NProgress.done();
-  }, [pathname, searchParams]);
+  }, [pathname, search]);
 
   return null;
 }
