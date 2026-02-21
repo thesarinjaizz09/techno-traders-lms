@@ -7,6 +7,8 @@ import { prefetchMessages } from "@/features/forum/server/prefetch"
 import Forum from "@/features/forum/components/forum"
 import { ForumContainer } from "@/features/forum/components/container"
 import { ForumError } from "@/features/forum/components/error"
+import { Suspense } from "react"
+import ForumSkeleton from "@/features/forum/components/forum-skeleton"
 
 export const metadata = generatePageMetadata({
   title: "Basic Community",
@@ -22,17 +24,19 @@ type PageProps = {
 }
 
 export default async function Page({ searchParams }: PageProps) {
-  const session = await isAuthenticated()
+  await isAuthenticated();
 
-  prefetchMessages()
+  prefetchMessages();
 
   return (
     <HydrateClient>
       <ForumContainer>
         <ErrorBoundary fallback={<ForumError />}>
-          <Forum />
+          <Suspense fallback={<ForumSkeleton />}>
+            <Forum />
+          </Suspense>
         </ErrorBoundary>
       </ForumContainer>
-    </HydrateClient >
-  )
+    </HydrateClient>
+  );
 }

@@ -3,10 +3,12 @@ import type { SearchParams } from "nuqs/server"
 import generatePageMetadata from "@/lib/utils/seo"
 import { ErrorBoundary } from "react-error-boundary"
 import { isAuthenticated } from "@/lib/auth/utils"
-import { prefetchMessages } from "@/features/forum/server/prefetch"
+import { prefetchPrivateMessages } from "@/features/forum/server/prefetch"
 import { ForumContainer } from "@/features/forum/components/container"
 import { ForumError } from "@/features/forum/components/error"
 import PrivateForum from "@/features/forum/components/private-forum"
+import ForumSkeleton from "@/features/forum/components/forum-skeleton"
+import { Suspense } from "react"
 
 export const metadata = generatePageMetadata({
   title: "Exclusive Community",
@@ -22,15 +24,17 @@ type PageProps = {
 }
 
 export default async function Page({ searchParams }: PageProps) {
-  const session = await isAuthenticated()
+  await isAuthenticated()
 
-  prefetchMessages()
+  prefetchPrivateMessages()
 
   return (
     <HydrateClient>
       <ForumContainer>
         <ErrorBoundary fallback={<ForumError />}>
-          <PrivateForum />
+          <Suspense fallback={<ForumSkeleton />}>
+            <PrivateForum />
+          </Suspense>
         </ErrorBoundary>
       </ForumContainer>
     </HydrateClient >

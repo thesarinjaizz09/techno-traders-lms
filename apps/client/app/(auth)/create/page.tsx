@@ -1,6 +1,9 @@
 import { CreateForm } from "@/app/(auth)/create/create-form"
-import { isNotAuthenticated } from "@/lib/auth/utils";
+import CheckingSession from "@/components/checking-session";
+import { getSession, isNotAuthenticated } from "@/lib/auth/utils";
 import generatePageMetadata from "@/lib/utils/seo";
+import { redirect } from "next/navigation";
+import { Suspense } from "react";
 
 export const metadata = generatePageMetadata({
   title: "Create Credentials",
@@ -11,10 +14,18 @@ export const metadata = generatePageMetadata({
   schemaType: "WebPage",
 });
 
+async function AuthCheck() {
+  const session = await getSession();
+  if (session) redirect(process.env.NEXT_PUBLIC_AUTH_SUCCESS_REDIRECT_URL || "/boards");
 
+  return null; // Only reaches here if NOT authenticated
+}
 
 export default async function SignupPage() {
-  await isNotAuthenticated();
-
-  return <CreateForm />
+  return (
+    <Suspense fallback={<CheckingSession />}>
+      <AuthCheck />
+      <CreateForm />
+    </Suspense>
+  );
 }
