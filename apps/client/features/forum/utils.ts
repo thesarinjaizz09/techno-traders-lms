@@ -30,13 +30,13 @@ export const SKELETON_COUNT = 5;
 export const channels: Channel[] = [
     {
         id: "global-community",
-        name: "Global Community",
+        name: "Basic Community",
         description: "Live market talk, setups, and execution updates.",
         unread: 8,
     },
     {
         id: "private-community",
-        name: "Private Community",
+        name: "Exclusive Community",
         description: "Exclusive live market talk, setups, and execution updates.",
         unread: 8,
     }

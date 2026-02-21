@@ -338,7 +338,6 @@ export default function Forum() {
     };
   }, [socket]);
 
-
   const channel = useMemo(
     () => channels.find((entry) => entry.id === activeChannel) ?? channels[0],
     [activeChannel]
@@ -406,14 +405,15 @@ export default function Forum() {
   };
 
   return (
-    <div className={`${openSans.className} relative h-full p-1 sm:p-4 md:px-1.5 md:py-2 gap-2 flex flex-col`}>
+    <div className={`${openSans.className} relative flex h-full flex-col p-1 sm:p-4 md:px-1.5 md:py-2 gap-2`}>
       <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,oklch(0.72_0.17_293/.12),transparent_42%),radial-gradient(circle_at_bottom_right,oklch(0.71_0.2_160/.08),transparent_40%)]" />
 
+      {/* Connection Banner – fixed height, always at top */}
       <ChatConnectionBanner />
 
-      <div className="grid h-full grid-cols-1">
-        <Card className="relative flex h-full min-h-[70vh] flex-col gap-0 overflow-hidden border-border/80 bg-card/70 py-0 backdrop-blur-md rounded-sm">
-          <div className="flex items-center justify-between border-b px-3 py-2.5 sm:px-4">
+      <div className="flex-1 flex flex-col min-h-0">
+        <Card className="relative flex flex-1 flex-col gap-0 overflow-hidden border-border/80 bg-card/70 py-0 backdrop-blur-md rounded-sm">
+          <div className="flex items-center justify-between border-b px-3 py-2.5 sm:px-4 shrink-0">
             <div className="min-w-0">
               <p className="flex items-center gap-2 text-sm font-semibold tracking-wide sm:text-base">
                 <Hash className="size-4 text-primary" />
@@ -464,7 +464,7 @@ export default function Forum() {
             </div>
           </div>
 
-          <div ref={messagesContainerRef} onScroll={onScroll} className="flex-1 space-y-1.5 overflow-y-auto p-3 sm:p-4 max-h-[76.5vh] scrollbar-thin scrollbar-thumb-rounded-sm scrollbar-thumb-muted/50">
+          <div ref={messagesContainerRef} onScroll={onScroll} className={cn("flex-1 space-y-1.5 overflow-y-auto p-3 sm:p-4 max-h-[76.5vh] scrollbar-thin scrollbar-thumb-rounded-sm scrollbar-thumb-muted/50", isLoading && "pointer-events-none", connected ? "" : "max-h-[68vh]")}>
             {isFetchingNextPage && (
               <div className="flex justify-center py-2">
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
